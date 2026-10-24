@@ -21,15 +21,20 @@ var knownHosts = map[string]string{
 	"github.com":    "github",
 	"gitlab.com":    "gitlab",
 	"bitbucket.org": "bitbucket",
+	"dev.azure.com": "ado",
 }
 
 // GuessProvider names the provider for host from its name alone: a known
-// public host, or a self-hosted one whose first label names the product
-// (github.example.com, gitlab.example.com). It returns "" if it cannot tell.
+// public host, an Azure DevOps organization (<org>.visualstudio.com), or a
+// self-hosted one whose first label names the product (github.example.com,
+// gitlab.example.com). It returns "" if it cannot tell.
 func GuessProvider(host string) string {
 	host = strings.ToLower(host)
 	if p, ok := knownHosts[host]; ok {
 		return p
+	}
+	if strings.HasSuffix(host, ".visualstudio.com") {
+		return "ado"
 	}
 	first, _, _ := strings.Cut(host, ".")
 	for _, p := range []string{"github", "gitlab"} {
