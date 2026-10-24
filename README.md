@@ -1,93 +1,206 @@
-# git-stack
+# git stack
 
+<img src=".img/slop-small.jpg" alt="For robots, by robots. Vibed without love or skill." height="24" />
 
+Stacked pull requests for any Git host, where each layer of the stack is a branch that can hold **any number of
+commits**.
 
-## Getting started
+`git stack` is a Git subcommand: put the `git-stack` binary on your `PATH` and Git runs it as `git stack`. Everything
+that touches branches (creating layers, navigating, cascading rebases, pushing, restructuring) is plain `git`, so it
+works the same against any Git server. Pull requests are handled by **provider plugins**. git-stack picks the plugin
+from the remote URL. GitHub and GitLab are supported today; Azure DevOps and Bitbucket are planned. When no provider
+applies, git-stack still manages the branches and simply opens no pull requests.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+`git stack` is a **derivative work of [gh-stack](https://github.com/github/gh-stack)** by GitHub, Inc., released under
+the MIT License. It reproduces the command-line interface of **gh-stack v0.2.1** and contains code from it. It is not
+affiliated with or endorsed by GitHub, GitLab or any other Git host.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Status
 
-## Add your files
+Work in progress. Available today:
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+| Command                                        | Description                                                                                                                                                                                         |
+|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `init [branches...]`                           | Start a stack (`-b/--base` sets the trunk)                                                                                                                                                          |
+| `add [branch]`                                 | Add a layer on top (`-m`, `-A`, `-u`)                                                                                                                                                               |
+| `view`                                         | Show the stack (`--short`, `--json`)                                                                                                                                                                |
+| `up [n]`, `down [n]`, `top`, `bottom`, `trunk` | Navigate the stack (`--print-path`)                                                                                                                                                                 |
+| `push`                                         | Push all unmerged branches with `--force-with-lease` (`--remote`)                                                                                                                                   |
+| `submit`                                       | Push and create/update one PR per branch, each targeting the branch below; in a terminal, edit titles, descriptions and draft state in a full-screen editor first (`--auto`, `--open`, `--remote`) |
+| `sync`                                         | Fetch, reconcile with the stack on the host, rebase if the trunk moved, push, retarget PRs (`--prune`, `--remote`)                                                                                 |
+| `merge [<pr>]`                                 | Merge PRs bottom-up to the chosen one, restacking and retargeting between merges (`--squash`, `--merge`, `--rebase`, `--merge-method`, `--yes`, `--timeout`)                                        |
+| `switch`                                       | Pick a branch of the current stack in a full-screen picker (`--print-path`)                                                                                                                         |
+| `checkout [<pr> \| <url> \| <branch>]`         | Check out a stack, setting it up from the host if needed; without arguments, pick from local and remote stacks (`--print-path`)                                                                     |
+| `modify`                                       | Restructure the stack in a full-screen editor: drop, fold, insert, reorder, rename, undo (`--continue`, `--abort`)                                                                                  |
+| `link <branch-or-pr>...`                       | Create or extend a stack on the host without local tracking (`--base`, `--open`, `--remote`)                                                                                                        |
+| `unstack [<pr>]`                               | Remove a stack locally and on the host (`--local`; alias `delete`)                                                                                                                                  |
+| `feedback [title]`                             | Open an issue for git-stack in the browser                                                                                                                                                          |
+| `rebase [branch]`                              | Cascade-rebase the stack onto the trunk (`--downstack`, `--upstack`, `--no-trunk`, `--continue`, `--abort`, `--remote`, `--preserve-dates`)                                                         |
 
-```
-cd existing_repo
-git remote add origin https://github.com/mhvelplund/git-stack.git
-git branch -M main
-git push -uf origin main
-```
+This covers every command of gh-stack v0.2.1. Every command takes `--provider` (see [Providers](#providers)).
 
-## Integrate with your tools
+## Requirements
 
-* [Set up project integrations](https://github.com/mhvelplund/git-stack/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- Git 2.36 or later, on Windows, Linux or macOS
+- For GitHub: [`gh`](https://cli.github.com), logged in with `gh auth login`
+- For GitLab: [`glab`](https://gitlab.com/gitlab-org/cli), logged in with `glab auth login`
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+git-stack is three binaries: `git-stack` itself and one plugin per provider, `git-stack-github` and
+`git-stack-gitlab`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
+
+1. Install the binaries (requires Go, see [Development](#development)):
+
+   ```sh
+   go install github.com/mhvelplund/git-stack/cmd/git-stack@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-github@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-gitlab@latest
+   ```
+
+   Make sure `$(go env GOPATH)/bin` is on your `PATH`.
+
+2. Check that Git finds it:
+
+   ```sh
+   git stack -h
+   ```
+
+   Use `git stack -h` or `git stack help <command>` for help. `git stack --help` does not work, because Git turns
+   `--help` into a man page lookup for `git-stack`.
+
+3. Optionally, add a shorter alias:
+
+   ```sh
+   git config --global alias.st stack   # git st view, git st up, ...
+   ```
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```sh
+git stack init auth-model          # start a stack on the default branch
+git commit -am "Add user model"    # commit as much as you like on each layer
+git stack add -Am "Add login API"  # new layer named MM-DD-add_login_api, with a commit
+git stack view                     # show the stack
+git stack down                     # move toward the trunk
+git commit --amend                 # rewrite a lower layer...
+git stack rebase                   # ...and restack everything above it
+git stack submit                   # push and open one PR per layer
+git stack sync --prune             # after the bottom PR merges: restack, retarget, clean up
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+`git stack submit --auto` creates draft PRs titled from the commits. Without `--auto`, a full-screen editor lets you
+pick which branches get PRs and edit each title, description and draft state. Every PR gets a block at the end of its
+description that lists the whole stack, so reviewers can move between layers. git-stack keeps that block up to date;
+text outside it is never touched.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+If a rebase hits a conflict, resolve it, `git add` the files and run `git stack rebase --continue`. To undo the whole
+operation, run `git stack rebase --abort`.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Stack metadata lives in `.git/git-stack` (shared by all worktrees) and is never committed.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Providers
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+| Provider | Detected for                                       | Uses                     | Stack on the host                                     |
+|----------|----------------------------------------------------|--------------------------|-------------------------------------------------------|
+| `github` | `github.com`, `github.*` hosts, hosts `gh` knows   | `gh`'s login and config  | GitHub's native stacked PRs, plus the description block |
+| `gitlab` | `gitlab.com`, `gitlab.*` hosts, hosts `glab` knows | `glab`                   | The description block                                 |
+| `none`   | anything else, e.g. a local path or unknown server | nothing                  | none: branches only, no PRs                           |
+
+The provider is chosen in this order:
+
+1. the `--provider <name>` flag;
+2. `git config git-stack.provider <name>`, set once per repository (or globally);
+3. the remote's host: `github.com` and `gitlab.com`, and self-hosted servers whose name starts with `github.` or
+   `gitlab.`;
+4. any installed plugin that recognises the host (`git-stack-github` and `git-stack-gitlab` claim hosts that `gh` or
+   `glab` is logged in to); the answer is remembered for a day in
+   `.git/git-stack-hosts.json`;
+5. `none`.
+
+For a self-hosted GitHub Enterprise Server or GitLab that is not detected, run once in the repository:
+
+```sh
+git config git-stack.provider gitlab
+```
+
+With provider `none`, `submit` only pushes, `sync` recognises a layer as merged when its commits are on the trunk
+(merge commits and fast-forwards; squash merges cannot be detected), and `merge`, `link` and checking out by PR
+number fail with exit code 9.
+
+On GitHub, git-stack also keeps GitHub's native stack in sync. If stacked PRs are not enabled for the repository (or
+on older GitHub Enterprise Server versions), it falls back to the description block alone.
+
+### Writing a provider
+
+A provider is an executable named `git-stack-<name>` (`git-stack-<name>.exe` on Windows). git-stack runs it once per
+operation as `git-stack-<name> <operation>`. The request is a JSON object on stdin and the answer is a JSON object on
+stdout. [`pkg/protocol`](pkg/protocol) defines the operations, the request and response types, and a `Serve` helper.
+A Go provider implements `protocol.Provider` and calls `protocol.Serve`; see
+[`cmd/git-stack-gitlab`](cmd/git-stack-gitlab/main.go) for a complete example. Its `describe` answer sets the host's
+terms (`PR` or `MR`, `#12` or `!12`), how the stack block is hidden in descriptions, and the description size limit.
+Providers in other languages only need to speak the same JSON.
+
+### Differences from gh-stack
+
+- The stack is recorded in a managed block at the end of each PR description on every host, and additionally in
+  GitHub's native stack on GitHub.
+- Renaming a layer in `modify` cannot rename its PR's head branch, so the next `submit` opens a new PR; close the old
+  one.
+- `push`, `submit` and `sync` refuse to overwrite commits that someone else pushed to a layer (for example an applied
+  review suggestion) instead of force-pushing over them.
+- `merge <pr>` for a stack you have not checked out needs the stack block in the PR description; plain PRs are not
+  guessed into a stack.
+- `merge` merges PRs one at a time, bottom up. It stops at the first failure, leaving earlier PRs merged.
+- Stack blocks written by glab-stax are recognised and replaced by git-stack's own, so `checkout` and `sync` pick up
+  stacks published with it.
+
+### Environment variables
+
+| Variable                       | Effect                                                            |
+|--------------------------------|-------------------------------------------------------------------|
+| `GIT_STACK_NO_UPDATE_NOTIFIER` | Any non-empty value disables the daily check for new releases.    |
+| `GIT_STACK_HYPERLINKS`         | `1` or `0` forces clickable PR links in `view` on or off.         |
+| `GIT_PAGER`, `PAGER`           | Pager for `view` (default `less -R`).                             |
+| `VISUAL`, `EDITOR`             | Editor for PR descriptions in the `submit` editor (`^e`).         |
+| `GH_TOKEN`, `GH_ENTERPRISE_TOKEN` | Read by the GitHub provider, as by `gh`.                       |
+
+### Agent skill
+
+[`skills/git-stack/SKILL.md`](skills/git-stack/SKILL.md) teaches coding agents how to drive `git stack`
+non-interactively.
+
+### Exit codes
+
+| Code | Meaning                                   |
+|------|-------------------------------------------|
+| 0    | Success                                   |
+| 1    | Generic error                             |
+| 2    | Not in a stack / stack not found          |
+| 3    | Rebase conflict                           |
+| 4    | Provider (Git host) failure               |
+| 5    | Invalid arguments or flags                |
+| 6    | Disambiguation required                   |
+| 7    | Operation already in progress             |
+| 8    | Stack locked by another process           |
+| 9    | Not supported by the provider (e.g. none) |
+
+## Development
+
+All development tools (Go, golangci-lint, gh, glab) are managed with [mise](https://mise.jdx.dev) and pinned in
+`mise.toml`.
+
+```sh
+mise install       # install the toolchain
+mise run build     # build git-stack and the plugins into bin/
+mise run test      # run the tests
+mise run lint      # go vet + golangci-lint
+mise run check     # all of the above
+mise run dist      # cross-compile for Windows, Linux and macOS into dist/
+```
+
+To try a build, put `bin/` first on your `PATH` and run `git stack` in any repository.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+MIT. See [LICENSE](LICENSE). Contains work derived from gh-stack, Copyright GitHub, Inc.

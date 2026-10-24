@@ -1,0 +1,247 @@
+package cli
+
+import (
+	"errors"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
+)
+
+func (h *harness) remoteSHA(branch string) string {
+	return h.repo.Git("ls-remote", "origin", "refs/heads/"+branch)
+}
+
+func TestPush(t *testing.T) {
+	h := threeLayers(t)
+	h.must("push")
+	for _, b := range []string{"a", "b", "c"} {
+		if !strings.HasPrefix(h.remoteSHA(b), h.sha(b)) {
+			t.Fatalf("%s not pushed", b)
+		}
+	}
+	// Rewritten history is force-pushed with a lease.
+	h.repo.Git("checkout", "--quiet", "a")
+	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended")
+	h.must("rebase", "--no-trunk")
+	h.must("push")
+	if !strings.HasPrefix(h.remoteSHA("c"), h.sha("c")) {
+		t.Fatal("rebased c not pushed")
+	}
+	// Someone else pushed to b: the lease must refuse to clobber it.
+	h.repo.PushFromElsewhere("b", "theirs.txt", "x\n", "their commit")
+	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended again")
+	h.must("rebase", "--no-trunk")
+	if r := h.run("push"); r.e == nil {
+		t.Fatal("push overwrote someone else's commit")
+	}
+}
+
+func TestSubmitCreatesStackOfMRs(t *testing.T) {
+	h := threeLayers(t)
+	h.must("submit", "--auto")
+
+	if len(h.gl.MRs) != 3 {
+		t.Fatalf("created %d MRs", len(h.gl.MRs))
+	}
+	want := map[string]struct{ target, title string }{
+		"a": {"main", "Draft: a1"},
+		"b": {"a", "Draft: b"}, // two commits: humanized branch name
+		"c": {"b", "Draft: c1"},
+	}
+	for _, mr := range h.gl.MRs {
+		w := want[mr.SourceBranch]
+		if mr.TargetBranch != w.target || mr.Title != w.title || !mr.Draft {
+			t.Errorf("MR for %s = target %s, title %q, draft %v", mr.SourceBranch, mr.TargetBranch, mr.Title, mr.Draft)
+		}
+		info, ok := forge.ParseBlock(mr.Description)
+		if !ok || len(info.Items) != 3 || info.Trunk != "main" || info.Items[0].Branch != "a" {
+			t.Errorf("MR !%d block = %+v, %v", mr.IID, info, ok)
+		}
+		if !strings.Contains(mr.Description, "**!"+strconv.Itoa(mr.IID)+"** ← this MR") {
+			t.Errorf("MR !%d does not highlight itself:\n%s", mr.IID, mr.Description)
+		}
+	}
+	s := h.file().Stacks[0]
+	for _, b := range s.Branches {
+		if b.CR == nil || b.CR.URL == "" {
+			t.Fatalf("%s has no MR recorded", b.Name)
+		}
+	}
+
+	// A second submit changes nothing on GitLab.
+	before := len(h.gl.Calls)
+	h.must("submit", "--auto")
+	for _, c := range h.gl.Calls[before:] {
+		if c.Method != "GET" {
+			t.Errorf("idempotent submit made a write: %s %s", c.Method, c.Endpoint)
+		}
+	}
+}
+
+func TestSubmitOpenAndRepairs(t *testing.T) {
+	h := threeLayers(t)
+	h.must("submit", "--auto")
+	mrB := h.gl.MRs[2]
+	mrB.TargetBranch = "main"
+	mrB.AutoMerge = true
+
+	h.must("submit", "--open")
+	if mrB.TargetBranch != "a" || mrB.AutoMerge {
+		t.Fatalf("MR b not repaired: target %s, auto-merge %v", mrB.TargetBranch, mrB.AutoMerge)
+	}
+	for _, mr := range h.gl.MRs {
+		if mr.Draft {
+			t.Errorf("!%d still draft", mr.IID)
+		}
+	}
+}
+
+func TestSubmitAfterBottomMerged(t *testing.T) {
+	h := threeLayers(t)
+	h.must("submit", "--auto")
+	h.gl.MRs[1].State = "merged"
+
+	h.must("submit", "--auto")
+	if h.gl.MRs[2].TargetBranch != "main" {
+		t.Fatalf("b's MR targets %s, want main", h.gl.MRs[2].TargetBranch)
+	}
+	if !h.file().Stacks[0].Branches[0].Merged {
+		t.Fatal("a not marked merged")
+	}
+	if len(h.gl.MRs) != 3 {
+		t.Fatal("a new MR was created for a merged branch")
+	}
+}
+
+func TestSubmitStartsFreshStackWhenAllMerged(t *testing.T) {
+	h := newHarness(t)
+	h.must("init", "a")
+	h.repo.Commit("a.txt", "a\n", "a1")
+	h.must("submit", "--auto")
+	h.gl.MRs[1].State = "merged"
+	writeFile(t, h.repo.Dir+"/n.txt", "n\n")
+	h.must("add", "-A", "-m", "next thing")
+
+	h.must("submit", "--auto")
+	s := h.file().Stacks[0]
+	if len(s.Branches) != 1 || s.Branches[0].Name != "03-24-next_thing" {
+		t.Fatalf("merged layers not pruned: %v", names(s))
+	}
+	mr := h.gl.MRs[2]
+	info, _ := forge.ParseBlock(mr.Description)
+	if mr.TargetBranch != "main" || len(info.Items) != 1 {
+		t.Fatalf("new MR target %s, block %+v", mr.TargetBranch, info)
+	}
+}
+
+func TestSubmitUsesTemplateAndPrompts(t *testing.T) {
+	h := newHarness(t)
+	tmpl := filepath.Join(h.repo.Dir, ".gitlab", "merge_request_templates")
+	if err := os.MkdirAll(tmpl, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(tmpl, "Default.md"), "## Checklist\n")
+	h.repo.Git("add", ".gitlab")
+	h.repo.Git("commit", "--quiet", "-m", "template")
+	h.must("init", "a")
+	h.repo.Commit("a.txt", "a\n", "a1")
+
+	// Edit the title in the editor: clear "a1", type "My title", submit.
+	h.keys = []string{"enter", "backspace", "backspace", "M", "y", " ", "t", "i", "t", "l", "e", "ctrl+s"}
+	r := h.runIn(h.repo.Dir, "", true, "submit")
+	if r.e != nil {
+		t.Fatal(r.e, r.err)
+	}
+	mr := h.gl.MRs[1]
+	if mr.Title != "My title" || mr.Draft || !strings.HasPrefix(mr.Description, "## Checklist\n") {
+		t.Fatalf("MR = %+v", mr)
+	}
+}
+
+func TestSubmitEditorSkipAndCancel(t *testing.T) {
+	h := threeLayers(t)
+	h.keys = []string{"q"}
+	r := h.runIn(h.repo.Dir, "", true, "submit")
+	if r.e == nil || h.remoteSHA("a") != "" {
+		t.Fatalf("cancel pushed or succeeded: %v", r.e)
+	}
+	// Skip b (and therefore c): only a gets an MR, but all three are pushed.
+	h.keys = []string{"j", "space", "ctrl+s"}
+	if r := h.runIn(h.repo.Dir, "", true, "submit"); r.e != nil {
+		t.Fatal(r.e, r.err)
+	}
+	if len(h.gl.MRs) != 1 || h.gl.MRs[1].SourceBranch != "a" || h.remoteSHA("c") == "" {
+		t.Fatalf("MRs = %d, c pushed = %v", len(h.gl.MRs), h.remoteSHA("c") != "")
+	}
+}
+
+func TestSubmitPartialFailureKeepsProgress(t *testing.T) {
+	h := threeLayers(t)
+	creates := 0
+	h.runner = func(args ...string) ([]byte, error) {
+		if strings.Contains(strings.Join(args, " "), "-X POST projects/group%2Frepo/merge_requests") {
+			if creates++; creates == 2 {
+				return nil, errors.New("500 Internal Server Error")
+			}
+		}
+		return h.gl.Run(args...)
+	}
+	r := h.run("submit", "--auto")
+	if exitcode.Of(r.e) != exitcode.ProviderFailure {
+		t.Fatalf("exit %d: %v", exitcode.Of(r.e), r.e)
+	}
+	s := h.file().Stacks[0]
+	if s.Branches[0].CR == nil || s.Branches[1].CR != nil || s.Branches[2].CR == nil {
+		t.Fatalf("progress not saved: %+v %+v %+v", s.Branches[0].CR, s.Branches[1].CR, s.Branches[2].CR)
+	}
+}
+
+func TestSubmitDoesNotClobberRemoteCommits(t *testing.T) {
+	h := threeLayers(t)
+	h.must("submit", "--auto")
+	// A reviewer applies a suggestion on GitLab: a commit lands on b remotely.
+	theirs := h.repo.PushFromElsewhere("b", "theirs.txt", "x\n", "Apply suggestion")
+	// Locally, a lower layer is amended and the stack restacked without fetching.
+	h.repo.Git("checkout", "--quiet", "a")
+	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended")
+	h.must("rebase", "--no-trunk")
+
+	r := h.run("submit", "--auto") // fetches before pushing
+	if r.e == nil || !strings.Contains(r.e.Error(), "b on origin") {
+		t.Fatalf("submit did not refuse to overwrite b: %v", r.e)
+	}
+	if !strings.HasPrefix(h.remoteSHA("b"), theirs) || !strings.HasPrefix(h.remoteSHA("a"), h.sha("origin/a")) {
+		t.Fatal("a branch was pushed although the push was refused")
+	}
+}
+
+func TestSubmitIgnoresOldMergedMRWithSameBranchName(t *testing.T) {
+	h := newHarness(t)
+	h.gl.Add(glab.MR{IID: 1, Title: "old", SourceBranch: "fix", TargetBranch: "main", State: "merged", SHA: strings.Repeat("1", 40)})
+	h.must("init", "fix")
+	h.repo.Commit("f.txt", "f\n", "new fix")
+	r := h.must("submit", "--auto")
+	s := h.file().Stacks[0]
+	if len(s.Branches) != 1 || s.Branches[0].Merged || s.Branches[0].CR == nil || s.Branches[0].CR.Number != 2 {
+		t.Fatalf("new layer was matched to the old merged MR: %+v\n%s", s.Branches, r.err)
+	}
+}
+
+func TestSubmitIgnoresForkMRWithSameBranchName(t *testing.T) {
+	h := threeLayers(t)
+	fork := h.gl.Add(glab.MR{IID: 1, Title: "contributor", SourceBranch: "b", TargetBranch: "main", Description: "theirs"})
+	fork.SourceProjectID, fork.TargetProjectID = 77, 5
+	h.must("submit", "--auto")
+	if fork.TargetBranch != "main" || fork.Description != "theirs" {
+		t.Fatalf("the fork's MR was taken over: target %s, description %q", fork.TargetBranch, fork.Description)
+	}
+	if b := h.file().Stacks[0].Get("b"); b.CR == nil || b.CR.Number == 1 {
+		t.Fatalf("b's MR = %+v", b.CR)
+	}
+}

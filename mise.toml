@@ -1,3 +1,30 @@
 [tools]
-"github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
+go = "1.26"
+golangci-lint = "2"
+gh = "latest"
 glab = "latest"
+# Used to stack this repo's own MRs until git-stack can do it.
+"github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
+
+[vars]
+ldflags = "-X=github.com/mhvelplund/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"
+
+[tasks.build]
+description = "Build git-stack and the provider plugins into bin/"
+run = "go build -ldflags={{vars.ldflags}} -o bin/ ./cmd/..."
+
+[tasks.test]
+description = "Run all tests"
+run = "go test ./..."
+
+[tasks.lint]
+description = "Run go vet and golangci-lint"
+run = ["go vet ./...", "golangci-lint run ./..."]
+
+[tasks.check]
+description = "Build, lint and test"
+depends = ["build", "lint", "test"]
+
+[tasks.dist]
+description = "Cross-compile all binaries for Windows, Linux and macOS into dist/"
+run = "go run ./scripts/dist {{vars.ldflags}}"
