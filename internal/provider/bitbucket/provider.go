@@ -105,7 +105,7 @@ func (p *Provider) GetCR(n int) (*protocol.CR, error) { return toCR(p.C.GetPR(n)
 // FindCRForBranch returns the open PR whose head is branch, else the most
 // recently merged one, else nil. PRs from forks are ignored.
 func (p *Provider) FindCRForBranch(branch string) (*protocol.CR, error) {
-	prs, err := p.C.ListPRs(`source.branch.name = `+quote(branch)+` AND (state = "OPEN" OR state = "MERGED")`, true)
+	prs, err := p.C.ListPRs(`source.branch.name = `+quote(branch), true, "OPEN", "MERGED")
 	if err != nil {
 		return nil, err
 	}
