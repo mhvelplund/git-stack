@@ -284,7 +284,14 @@ func (p *Provider) Merge(n int, method, sha string) (*protocol.CR, error) {
 			return nil, err
 		}
 	}
-	return p.GetCR(n)
+	cr, err := p.GetCR(n)
+	if err != nil || task.TaskStatus == "SUCCESS" || cr.Merged() {
+		return cr, err
+	}
+	if href == "" {
+		return nil, protocol.Errorf(protocol.CodeFailure, "Bitbucket accepted the merge of PR %d but gave no task to follow; check the PR", n)
+	}
+	return nil, protocol.Errorf(protocol.CodeFailure, "Bitbucket's merge task for PR %d ended with status %q", n, task.TaskStatus)
 }
 
 // GetBranch reports whether name is the main branch, and whether a branch
