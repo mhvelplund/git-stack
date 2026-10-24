@@ -21,8 +21,8 @@ const devOpsResource = "499b84ac-1321-427f-aa17-267ca6975798"
 
 // restAuthHint tells the user how to give the REST calls credentials.
 const restAuthHint = "az cannot retarget pull requests or complete them with a rebase, so git-stack calls the REST API " +
-	"for that; set " + patEnv + " to a personal access token with Code (read and write) scope, or use an `az login` " +
-	"identity that the organization accepts"
+	"for that; export " + patEnv + " with the personal access token you gave `az devops login` (Code read and write " +
+	"scope), since git-stack cannot read the one az stored"
 
 // REST calls the Azure DevOps REST API for what az cannot do.
 type REST struct {

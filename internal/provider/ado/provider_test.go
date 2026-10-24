@@ -568,9 +568,13 @@ func TestClassify(t *testing.T) {
 		"ERROR: Please run 'az login' to setup account.":                 protocol.CodeAuth,
 		"ERROR: TF400813: The user is not authorized":                    protocol.CodeAuth,
 		"ERROR: something broke":                                         protocol.CodeFailure,
+		"ERROR: 'repos' is misspelled or not recognized by the system.":  protocol.CodeFailure,
 	} {
 		if got := protocol.CodeOf(classify(errors.New(msg))); got != code {
 			t.Errorf("classify(%q) = %s, want %s", msg, got, code)
 		}
+	}
+	if err := classify(errors.New("ERROR: 'devops' is misspelled or not recognized by the system.")); !strings.Contains(err.Error(), "az extension add --name azure-devops") {
+		t.Errorf("missing extension error = %v", err)
 	}
 }
