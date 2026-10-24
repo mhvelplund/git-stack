@@ -6,6 +6,9 @@ glab = "latest"
 pre-commit = "4"
 # Used to stack this repo's own MRs until git-stack can do it.
 "github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
+"go:github.com/mhvelplund/git-stack/cmd/git-stack" = "0.1.0"
+"go:github.com/mhvelplund/git-stack/cmd/git-stack-github" = "0.1.0"
+"go:github.com/mhvelplund/git-stack/cmd/git-stack-gitlab" = "0.1.0"
 
 [vars]
 ldflags = "-X=github.com/mhvelplund/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"
@@ -31,5 +34,5 @@ description = "Build, lint and test"
 depends = ["build", "lint", "test"]
 
 [tasks.dist]
-description = "Cross-compile all binaries for Windows, Linux and macOS into dist/"
+description = "Cross-compile all binaries for Windows, Linux and macOS into dist/ as <name>-<os>-<arch>"
 run = "go run ./scripts/dist {{vars.ldflags}}"
