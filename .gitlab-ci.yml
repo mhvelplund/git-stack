@@ -22,7 +22,11 @@ secret_detection:
 # The toolchain comes from mise.toml. Only the tools CI needs are installed:
 # gh, glab and glab-stax are for working on the repository by hand.
 .mise:
-  image: jdxcode/mise:latest
+  # The image's entrypoint is mise itself, which would turn the runner's
+  # `sh -c <script>` into `mise sh -c <script>`.
+  image:
+    name: jdxcode/mise:latest
+    entrypoint: [""]
   variables:
     MISE_EXEC_AUTO_INSTALL: 'false'
     MISE_TASK_RUN_AUTO_INSTALL: 'false'
