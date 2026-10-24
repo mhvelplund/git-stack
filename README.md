@@ -8,7 +8,7 @@ commits**.
 `git stack` is a Git subcommand: put the `git-stack` binary on your `PATH` and Git runs it as `git stack`. Everything
 that touches branches (creating layers, navigating, cascading rebases, pushing, restructuring) is plain `git`, so it
 works the same against any Git server. Pull requests are handled by **provider plugins**. git-stack picks the plugin
-from the remote URL. GitHub, GitLab and Bitbucket Cloud are supported today; Azure DevOps is planned. When no provider
+from the remote URL. GitHub, GitLab, Bitbucket Cloud and Azure DevOps are supported. When no provider
 applies, git-stack still manages the branches and simply opens no pull requests.
 
 `git stack` is a **derivative work of [gh-stack](https://github.com/github/gh-stack)** by GitHub, Inc., released under
@@ -47,11 +47,14 @@ This covers every command of gh-stack v0.2.1. Every command takes `--provider` (
 - For Bitbucket Cloud: credentials in `BITBUCKET_TOKEN` (a workspace, project or repository access token), or in
   `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an Atlassian API token with Bitbucket scopes), or a `bitbucket.org`
   credential stored in git's credential helper
+- For Azure DevOps: the [Azure CLI](https://learn.microsoft.com/cli/azure/) (`az`), logged in with `az login` or
+  `az devops login`; its `azure-devops` extension is installed on first use. Retargeting PRs and rebase merges also
+  need `AZURE_DEVOPS_EXT_PAT` unless the organization accepts the `az login` identity (see [Providers](#providers))
 
 ## Installation
 
-git-stack is four binaries: `git-stack` itself and one plugin per provider, `git-stack-github`, `git-stack-gitlab`
-and `git-stack-bitbucket`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
+git-stack is five binaries: `git-stack` itself and one plugin per provider, `git-stack-github`, `git-stack-gitlab`,
+`git-stack-bitbucket` and `git-stack-ado`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
 
 1. Install the binaries (requires Go, see [Development](#development)):
 
@@ -60,6 +63,7 @@ and `git-stack-bitbucket`. Install the providers you need next to `git-stack` or
    go install github.com/mhvelplund/git-stack/cmd/git-stack-github@latest
    go install github.com/mhvelplund/git-stack/cmd/git-stack-gitlab@latest
    go install github.com/mhvelplund/git-stack/cmd/git-stack-bitbucket@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-ado@latest
    ```
 
    Make sure `$(go env GOPATH)/bin` is on your `PATH`.
@@ -105,22 +109,23 @@ Stack metadata lives in `.git/git-stack` (shared by all worktrees) and is never 
 
 ## Providers
 
-| Provider | Detected for                                       | Uses                     | Stack on the host                                     |
-|----------|----------------------------------------------------|--------------------------|-------------------------------------------------------|
-| `github` | `github.com`, `github.*` hosts, hosts `gh` knows   | `gh`'s login and config  | GitHub's native stacked PRs, plus the description block |
-| `gitlab` | `gitlab.com`, `gitlab.*` hosts, hosts `glab` knows | `glab`                   | The description block                                 |
-| `bitbucket` | `bitbucket.org` (Bitbucket Cloud only)          | the REST API, see below  | The description block                                 |
-| `none`   | anything else, e.g. a local path or unknown server | nothing                  | none: branches only, no PRs                           |
+| Provider    | Detected for                                                      | Uses                    | Stack on the host                                       |
+|-------------|-------------------------------------------------------------------|-------------------------|---------------------------------------------------------|
+| `github`    | `github.com`, `github.*` hosts, hosts `gh` knows                  | `gh`'s login and config | GitHub's native stacked PRs, plus the description block |
+| `gitlab`    | `gitlab.com`, `gitlab.*` hosts, hosts `glab` knows                | `glab`                  | The description block                                   |
+| `bitbucket` | `bitbucket.org` (Bitbucket Cloud only)                            | the REST API, see below | The description block                                   |
+| `ado`       | `dev.azure.com`, `*.visualstudio.com`, any `.../_git/<repo>` path | `az`, see below         | The description block                                   |
+| `none`      | anything else, e.g. a local path or unknown server                | nothing                 | none: branches only, no PRs                             |
 
 The provider is chosen in this order:
 
 1. the `--provider <name>` flag;
 2. `git config git-stack.provider <name>`, set once per repository (or globally);
-3. the remote's host: `github.com`, `gitlab.com` and `bitbucket.org`, and self-hosted servers whose name starts with `github.` or
-   `gitlab.`;
+3. the remote's host: `github.com`, `gitlab.com`, `bitbucket.org`, `dev.azure.com` and `*.visualstudio.com`, and
+   self-hosted servers whose name starts with `github.` or `gitlab.`;
 4. any installed plugin that recognises the host (`git-stack-github` and `git-stack-gitlab` claim hosts that `gh` or
-   `glab` is logged in to); the answer is remembered for a day in
-   `.git/git-stack-hosts.json`;
+   `glab` is logged in to, and `git-stack-ado` claims Azure DevOps Server remotes, whose paths contain `/_git/`); the
+   answer is remembered for a day in `.git/git-stack-hosts.json`;
 5. `none`.
 
 For a self-hosted GitHub Enterprise Server or GitLab that is not detected, run once in the repository:
@@ -141,6 +146,14 @@ itself. It takes the first credential it finds: `BITBUCKET_TOKEN` (sent as a Bea
 `BITBUCKET_API_TOKEN`, or the `bitbucket.org` credential from git's credential helpers (never prompting). PRs are
 linked by URL, and the stack block is hidden as a Markdown link reference. Bitbucket Cloud has no auto-merge, so
 `merge` merges each PR at once and fails if checks or approvals are missing. Bitbucket Data Center is not supported.
+
+On Azure DevOps, git-stack works through `az` and its `azure-devops` extension, with `az`'s login. `az` cannot change
+a PR's target branch or complete it with a rebase, so for those two operations the provider calls the REST API
+directly. It authenticates with `AZURE_DEVOPS_EXT_PAT` (a personal access token with Code read and write scope) if
+set, and otherwise with an access token for the `az login` identity, which organizations backed by a Microsoft
+account may refuse. Every stack of two or more PRs needs retargeting when its bottom PR merges, so set the variable
+if `sync` or `merge` report an authentication error. When policies (reviewers, builds) block completion, `merge`
+sets the PR to auto-complete and waits. PRs are referenced as `!12`, and descriptions are limited to 4000 characters.
 
 ### Writing a provider
 
@@ -176,6 +189,7 @@ Providers in other languages only need to speak the same JSON.
 | `VISUAL`, `EDITOR`             | Editor for PR descriptions in the `submit` editor (`^e`).         |
 | `GH_TOKEN`, `GH_ENTERPRISE_TOKEN` | Read by the GitHub provider, as by `gh`.                       |
 | `BITBUCKET_TOKEN`, `BITBUCKET_EMAIL`, `BITBUCKET_API_TOKEN` | Credentials of the Bitbucket provider (see [Providers](#providers)). |
+| `AZURE_DEVOPS_EXT_PAT` | Personal access token for the Azure DevOps provider, as for `az devops` (see [Providers](#providers)). |
 
 ### Agent skill
 
