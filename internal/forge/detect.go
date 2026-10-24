@@ -18,8 +18,9 @@ const ConfigKey = "git-stack.provider"
 
 // knownHosts maps public hosts to their provider.
 var knownHosts = map[string]string{
-	"github.com": "github",
-	"gitlab.com": "gitlab",
+	"github.com":    "github",
+	"gitlab.com":    "gitlab",
+	"bitbucket.org": "bitbucket",
 }
 
 // GuessProvider names the provider for host from its name alone: a known
