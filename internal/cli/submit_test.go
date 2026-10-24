@@ -2,12 +2,13 @@ package cli
 
 import (
 	"errors"
-	"github.com/mhvelplund/git-stack/internal/forge"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/mhvelplund/git-stack/internal/forge"
 
 	"github.com/mhvelplund/git-stack/internal/exitcode"
 	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
