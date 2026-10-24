@@ -10,3 +10,7 @@ linters:
         - (io.Closer).Close
         - (io.WriteCloser).Close
         - (*os.File).Close
+formatters:
+  enable:
+    - gofmt
+    - goimports

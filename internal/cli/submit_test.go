@@ -2,12 +2,13 @@ package cli
 
 import (
 	"errors"
-	"gitlab.com/malephex/git-stack/internal/forge"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+
+	"gitlab.com/malephex/git-stack/internal/forge"
 
 	"gitlab.com/malephex/git-stack/internal/exitcode"
 	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"

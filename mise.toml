@@ -3,11 +3,16 @@ go = "1.26"
 golangci-lint = "2"
 gh = "latest"
 glab = "latest"
+pre-commit = "4"
 # Used to stack this repo's own MRs until git-stack can do it.
 "github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
 
 [vars]
 ldflags = "-X=gitlab.com/malephex/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"
+
+[hooks]
+# Install the git hooks from .pre-commit-config.yaml whenever tools are installed.
+postinstall = "pre-commit install"
 
 [tasks.build]
 description = "Build git-stack and the provider plugins into bin/"

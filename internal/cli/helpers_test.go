@@ -2,10 +2,11 @@ package cli
 
 import (
 	"bytes"
-	"gitlab.com/malephex/git-stack/internal/forge"
 	"strings"
 	"testing"
 	"time"
+
+	"gitlab.com/malephex/git-stack/internal/forge"
 
 	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
 	"gitlab.com/malephex/git-stack/internal/provider/gitlab/glabtest"
