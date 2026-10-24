@@ -10,11 +10,16 @@ import (
 
 func TestParseRemoteURL(t *testing.T) {
 	cases := map[string][2]string{
-		"git@gitlab.com:group/repo.git":                {"gitlab.com", "group/repo"},
-		"ssh://git@gitlab.example:2222/a/b/c.git":      {"gitlab.example", "a/b/c"},
-		"https://gitlab.com/group/sub/repo":            {"gitlab.com", "group/sub/repo"},
-		"https://oauth2:tok@gitlab.com/group/repo.git": {"gitlab.com", "group/repo"},
-		"work-gl:team/repo.git":                        {"work-gl", "team/repo"},
+		"git@gitlab.com:group/repo.git":                     {"gitlab.com", "group/repo"},
+		"ssh://git@gitlab.example:2222/a/b/c.git":           {"gitlab.example", "a/b/c"},
+		"https://gitlab.com/group/sub/repo":                 {"gitlab.com", "group/sub/repo"},
+		"https://oauth2:tok@gitlab.com/group/repo.git":      {"gitlab.com", "group/repo"},
+		"work-gl:team/repo.git":                             {"work-gl", "team/repo"},
+		"https://org@dev.azure.com/org/My%20Proj/_git/repo": {"dev.azure.com", "org/My Proj/_git/repo"},
+		"git@ssh.dev.azure.com:v3/org/proj/repo":            {"dev.azure.com", "org/proj/_git/repo"},
+		"org@vs-ssh.visualstudio.com:v3/org/proj/repo":      {"org.visualstudio.com", "proj/_git/repo"},
+		"https://org.visualstudio.com/proj/_git/repo":       {"org.visualstudio.com", "proj/_git/repo"},
+		"ssh://server:22/tfs/Coll/proj/_git/repo":           {"server", "tfs/Coll/proj/_git/repo"},
 	}
 	for in, want := range cases {
 		got, err := ParseRemoteURL(in)
@@ -118,7 +123,7 @@ func TestHostName(t *testing.T) {
 func TestGuessProvider(t *testing.T) {
 	for host, want := range map[string]string{
 		"github.com": "github", "GitLab.com": "gitlab", "gitlab.corp.example": "gitlab",
-		"github.corp.example": "github", "bitbucket.org": "bitbucket", "bitbucket.corp.example": "", "git.example": "",
+		"github.corp.example": "github", "bitbucket.org": "bitbucket", "dev.azure.com": "ado", "org.visualstudio.com": "ado", "ssh.dev.azure.com": "", "bitbucket.corp.example": "", "git.example": "",
 	} {
 		if got := GuessProvider(host); got != want {
 			t.Errorf("GuessProvider(%q) = %q, want %q", host, got, want)
