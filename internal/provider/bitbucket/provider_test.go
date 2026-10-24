@@ -408,6 +408,23 @@ func TestGetBranch(t *testing.T) {
 	}
 }
 
+func TestGlobMatch(t *testing.T) {
+	for _, c := range []struct {
+		pattern, name string
+		want          bool
+	}{
+		{"main", "main", true}, {"main", "mainx", false},
+		{"release/*", "release/1.0/x", true}, {"release/*", "release", false},
+		{"*", "", true}, {"*-hotfix", "a-hotfix", true}, {"*-hotfix", "a-hotfix2", false},
+		{"a*b*a", "aba", true}, {"a*a", "a", false}, {"f*o.*x", "foo.bar.x", true},
+		{"a.b", "axb", false},
+	} {
+		if got := globMatch(c.pattern, c.name); got != c.want {
+			t.Errorf("globMatch(%q, %q) = %v, want %v", c.pattern, c.name, got, c.want)
+		}
+	}
+}
+
 func TestGetRepoMapsStrategy(t *testing.T) {
 	f := newFake(t)
 	p := provider(t, f)

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -323,11 +322,29 @@ func (r restriction) guards(branch string) bool {
 	if r.MatchKind != "glob" || r.Pattern == "" {
 		return false
 	}
-	parts := strings.Split(r.Pattern, "*")
-	for i, s := range parts {
-		parts[i] = regexp.QuoteMeta(s)
+	return globMatch(r.Pattern, branch)
+}
+
+// globMatch reports whether name matches pattern, in which * matches any run
+// of characters, / included, as in Bitbucket's branch patterns.
+func globMatch(pattern, name string) bool {
+	parts := strings.Split(pattern, "*")
+	if len(parts) == 1 {
+		return pattern == name
 	}
-	return regexp.MustCompile("^" + strings.Join(parts, ".*") + "$").MatchString(branch)
+	rest, ok := strings.CutPrefix(name, parts[0])
+	if !ok {
+		return false
+	}
+	last := parts[len(parts)-1]
+	for _, part := range parts[1 : len(parts)-1] {
+		i := strings.Index(rest, part)
+		if i < 0 {
+			return false
+		}
+		rest = rest[i+len(part):]
+	}
+	return strings.HasSuffix(rest, last)
 }
 
 func (p *Provider) mainBranch() (string, error) {
