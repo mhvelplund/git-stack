@@ -1,14 +1,15 @@
 [tools]
-go = "1.26"
-golangci-lint = "2"
+"github:Azure/azure-cli" = "latest"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-ado" = "1.0.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-bitbucket" = "1.0.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-github" = "1.0.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-gitlab" = "1.0.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack" = "1.0.0"
 gh = "latest"
 glab = "latest"
+go = "1.26"
+golangci-lint = "2"
 pre-commit = "4"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack" = "0.2.0"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack-github" = "0.2.0"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack-gitlab" = "0.2.0"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack-bitbucket" = "0.2.0"
-"github:Azure/azure-cli" = "latest"
 
 [vars]
 ldflags = "-X=gitlab.com/malephex/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"
