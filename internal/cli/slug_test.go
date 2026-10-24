@@ -6,6 +6,7 @@ import (
 )
 
 func TestSlugify(t *testing.T) {
+	t.Parallel()
 	cases := map[string]string{
 		"Add login: v2!": "add_login_v2",
 		"fix--retry":     "fix-retry",

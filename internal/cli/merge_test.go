@@ -34,6 +34,7 @@ func (h *harness) originMainFiles() string {
 }
 
 func TestMergeWholeStackSquash(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.must("merge", "--yes", "--squash")
 
@@ -69,6 +70,7 @@ func TestMergeWholeStackSquash(t *testing.T) {
 }
 
 func TestMergeUpToMR(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.must("merge", "2", "--yes", "--squash")
 
@@ -85,6 +87,7 @@ func TestMergeUpToMR(t *testing.T) {
 }
 
 func TestMergeKeepsCommits(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.must("merge", "--yes", "--merge")
 	h.repo.Git("fetch", "--quiet")
@@ -94,6 +97,7 @@ func TestMergeKeepsCommits(t *testing.T) {
 }
 
 func TestMergeRefusesDrafts(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	r := h.run("merge", "--yes")
@@ -108,6 +112,7 @@ func TestMergeRefusesDrafts(t *testing.T) {
 }
 
 func TestMergeStopsOnFailure(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.gl.Fail["PUT projects/:project/merge_requests/2/merge"] = errors.New("405 Method Not Allowed")
 	r := h.run("merge", "--yes", "--squash")
@@ -121,6 +126,7 @@ func TestMergeStopsOnFailure(t *testing.T) {
 }
 
 func TestMergeWaitsForPipeline(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.gl.PendingPolls = 2
 	h.must("merge", "--yes", "--squash")
@@ -130,6 +136,7 @@ func TestMergeWaitsForPipeline(t *testing.T) {
 }
 
 func TestMergeTimesOut(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.gl.PendingPolls = 1000
 	h.tick = time.Minute
@@ -140,6 +147,7 @@ func TestMergeTimesOut(t *testing.T) {
 }
 
 func TestMergeDeletesSourceAfterRetarget(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.gl.MRs[1].RemoveSource = true
 	h.must("merge", "2", "--yes", "--squash")
@@ -155,6 +163,7 @@ func TestMergeDeletesSourceAfterRetarget(t *testing.T) {
 }
 
 func TestMergeWizard(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	// Options are listed top-down: 1) !3  2) !2  3) !1. Then the method list
 	// starts with the default (merge): 1) merge 2) squash 3) rebase.
@@ -171,6 +180,7 @@ func TestMergeWizard(t *testing.T) {
 }
 
 func TestMergeArgErrors(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	if got := exitcode.Of(h.run("merge", "--squash", "--merge").e); got != exitcode.InvalidArgs {
 		t.Errorf("two methods: exit %d", got)
@@ -189,6 +199,7 @@ func (h *harness) runGit(args ...string) (string, error) {
 
 // GitLab reports "locked" while it performs a merge; that is not a failure.
 func TestMergeWaitsThroughLockedState(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.gl.PendingPolls = 1
 	merged, locked := false, false
@@ -217,6 +228,7 @@ func TestMergeWaitsThroughLockedState(t *testing.T) {
 // !1 was merged earlier (here on GitLab) while !2 still targets a: !2 must be
 // restacked and retargeted before it is merged, not merged into a.
 func TestMergeRetargetsFirstLayerStillOnMergedBranch(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	if err := h.gl.OnMerge(h.gl.MRs[1], true); err != nil {
 		t.Fatal(err)
@@ -237,6 +249,7 @@ func TestMergeRetargetsFirstLayerStillOnMergedBranch(t *testing.T) {
 // An MR that is in no stack block is not merged together with whatever its
 // target branches lead to.
 func TestMergeRefusesMRWithoutStackBlock(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.gl.Add(glab.MR{IID: 1, Title: "release", SourceBranch: "main", TargetBranch: "production"})
 	h.gl.Add(glab.MR{IID: 2, Title: "feature", SourceBranch: "feature", TargetBranch: "main"})
@@ -253,6 +266,7 @@ func TestMergeRefusesMRWithoutStackBlock(t *testing.T) {
 
 // Failing to reach GitLab is a GitLab failure, not "not in a stack".
 func TestMergeLookupFailureExitCode(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	h.runner = func(args ...string) ([]byte, error) { return nil, errors.New("401 Unauthorized") }
 	if got := exitcode.Of(h.run("merge", "99", "--yes").e); got != exitcode.ProviderFailure {

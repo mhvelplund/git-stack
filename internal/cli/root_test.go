@@ -8,6 +8,7 @@ import (
 )
 
 func TestBadFlagIsInvalidArgs(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if got := exitcode.Of(h.run("--no-such-flag").e); got != exitcode.InvalidArgs {
 		t.Fatalf("exit code = %d, want %d", got, exitcode.InvalidArgs)
@@ -15,6 +16,7 @@ func TestBadFlagIsInvalidArgs(t *testing.T) {
 }
 
 func TestMutationRespectsLock(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	unlock, err := stack.Store{Dir: h.repo.Dir + "/.git"}.Lock()
 	if err != nil {
@@ -27,6 +29,7 @@ func TestMutationRespectsLock(t *testing.T) {
 }
 
 func TestUsageErrorsAreInvalidArgs(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	for _, args := range [][]string{{"no-such-command"}, {"view", "extra"}, {"up", "1", "2"}} {
 		if got := exitcode.Of(h.run(args...).e); got != exitcode.InvalidArgs {

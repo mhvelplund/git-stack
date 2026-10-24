@@ -11,6 +11,7 @@ import (
 )
 
 func TestInitCreatesBranches(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	mainSHA := h.repo.Git("rev-parse", "main")
 	h.must("init", "a", "b")
@@ -32,6 +33,7 @@ func TestInitCreatesBranches(t *testing.T) {
 }
 
 func TestInitAdoptsExistingBranch(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	mainSHA := h.repo.Git("rev-parse", "main")
 	h.repo.Git("checkout", "--quiet", "-b", "feat")
@@ -50,6 +52,7 @@ func TestInitAdoptsExistingBranch(t *testing.T) {
 }
 
 func TestInitErrors(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if got := exitcode.Of(h.run("init").e); got != exitcode.InvalidArgs {
 		t.Errorf("no args: exit %d", got)
@@ -67,6 +70,7 @@ func TestInitErrors(t *testing.T) {
 }
 
 func TestInitInteractive(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.repo.Git("checkout", "--quiet", "-b", "mine")
 	r := h.runIn(h.repo.Dir, "y\nsecond\n\n", true, "init")
@@ -79,6 +83,7 @@ func TestInitInteractive(t *testing.T) {
 }
 
 func TestAddFromTop(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.must("add", "b")
@@ -96,6 +101,7 @@ func TestAddFromTop(t *testing.T) {
 }
 
 func TestAddWithMessage(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "layer a")
@@ -120,6 +126,7 @@ func TestAddWithMessage(t *testing.T) {
 }
 
 func TestAddCommitsOntoEmptyBranch(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	writeFile(t, h.repo.Dir+"/README.md", "edited\n")
@@ -136,6 +143,7 @@ func TestAddCommitsOntoEmptyBranch(t *testing.T) {
 }
 
 func TestAddFlagValidation(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	if got := exitcode.Of(h.run("add", "-A", "b").e); got != exitcode.InvalidArgs {
@@ -154,6 +162,7 @@ func TestAddFlagValidation(t *testing.T) {
 }
 
 func TestAddOutsideStack(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if got := exitcode.Of(h.run("add", "x").e); got != exitcode.NotInStack {
 		t.Fatalf("non-interactive: exit %d", got)
@@ -169,6 +178,7 @@ func TestAddOutsideStack(t *testing.T) {
 }
 
 func TestInvalidBranchNameCreatesNothing(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if got := exitcode.Of(h.run("init", "ok", "b c").e); got != exitcode.InvalidArgs {
 		t.Fatalf("init: exit %d", got)
@@ -184,6 +194,7 @@ func TestInvalidBranchNameCreatesNothing(t *testing.T) {
 
 // add offers to start a stack while the trunk exists only as origin/main.
 func TestAddOfferInitWithoutLocalTrunk(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.repo.Git("checkout", "--quiet", "-b", "feature")
 	h.repo.Commit("f.txt", "f\n", "f1")
@@ -198,6 +209,7 @@ func TestAddOfferInitWithoutLocalTrunk(t *testing.T) {
 
 // A commit rejected by a hook still leaves the new layer in the stack.
 func TestAddKeepsLayerWhenCommitFails(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")
@@ -219,6 +231,7 @@ func TestAddKeepsLayerWhenCommitFails(t *testing.T) {
 
 // A branch that exists only on the remote is adopted, not recreated.
 func TestInitAdoptsRemoteOnlyBranch(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	other := h.repo.Clone()
 	other.Git("checkout", "--quiet", "-b", "feat", "origin/main")

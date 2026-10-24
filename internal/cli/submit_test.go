@@ -19,6 +19,7 @@ func (h *harness) remoteSHA(branch string) string {
 }
 
 func TestPush(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("push")
 	for _, b := range []string{"a", "b", "c"} {
@@ -44,6 +45,7 @@ func TestPush(t *testing.T) {
 }
 
 func TestSubmitCreatesStackOfMRs(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 
@@ -86,6 +88,7 @@ func TestSubmitCreatesStackOfMRs(t *testing.T) {
 }
 
 func TestSubmitOpenAndRepairs(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	mrB := h.gl.MRs[2]
@@ -104,6 +107,7 @@ func TestSubmitOpenAndRepairs(t *testing.T) {
 }
 
 func TestSubmitAfterBottomMerged(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	h.gl.MRs[1].State = "merged"
@@ -121,6 +125,7 @@ func TestSubmitAfterBottomMerged(t *testing.T) {
 }
 
 func TestSubmitStartsFreshStackWhenAllMerged(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")
@@ -142,6 +147,7 @@ func TestSubmitStartsFreshStackWhenAllMerged(t *testing.T) {
 }
 
 func TestSubmitUsesTemplateAndPrompts(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	tmpl := filepath.Join(h.repo.Dir, ".gitlab", "merge_request_templates")
 	if err := os.MkdirAll(tmpl, 0o755); err != nil {
@@ -166,6 +172,7 @@ func TestSubmitUsesTemplateAndPrompts(t *testing.T) {
 }
 
 func TestSubmitEditorSkipAndCancel(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.keys = []string{"q"}
 	r := h.runIn(h.repo.Dir, "", true, "submit")
@@ -183,6 +190,7 @@ func TestSubmitEditorSkipAndCancel(t *testing.T) {
 }
 
 func TestSubmitPartialFailureKeepsProgress(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	creates := 0
 	h.runner = func(args ...string) ([]byte, error) {
@@ -204,6 +212,7 @@ func TestSubmitPartialFailureKeepsProgress(t *testing.T) {
 }
 
 func TestSubmitDoesNotClobberRemoteCommits(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	// A reviewer applies a suggestion on GitLab: a commit lands on b remotely.
@@ -223,6 +232,7 @@ func TestSubmitDoesNotClobberRemoteCommits(t *testing.T) {
 }
 
 func TestSubmitIgnoresOldMergedMRWithSameBranchName(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.gl.Add(glab.MR{IID: 1, Title: "old", SourceBranch: "fix", TargetBranch: "main", State: "merged", SHA: strings.Repeat("1", 40)})
 	h.must("init", "fix")
@@ -235,6 +245,7 @@ func TestSubmitIgnoresOldMergedMRWithSameBranchName(t *testing.T) {
 }
 
 func TestSubmitIgnoresForkMRWithSameBranchName(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	fork := h.gl.Add(glab.MR{IID: 1, Title: "contributor", SourceBranch: "b", TargetBranch: "main", Description: "theirs"})
 	fork.SourceProjectID, fork.TargetProjectID = 77, 5
