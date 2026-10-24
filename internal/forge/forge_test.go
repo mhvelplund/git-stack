@@ -107,6 +107,14 @@ func TestLegacyGlabStaxBlock(t *testing.T) {
 	}
 }
 
+func TestHostName(t *testing.T) {
+	for name, want := range map[string]string{"github": "GitHub", "gitlab": "GitLab", "bitbucket": "Bitbucket", "fake": "fake"} {
+		if got := (&Forge{Info: Info{Name: name}}).HostName(); got != want {
+			t.Errorf("HostName(%s) = %q, want %q", name, got, want)
+		}
+	}
+}
+
 func TestGuessProvider(t *testing.T) {
 	for host, want := range map[string]string{
 		"github.com": "github", "GitLab.com": "gitlab", "gitlab.corp.example": "gitlab",
