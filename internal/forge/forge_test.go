@@ -110,7 +110,7 @@ func TestLegacyGlabStaxBlock(t *testing.T) {
 func TestGuessProvider(t *testing.T) {
 	for host, want := range map[string]string{
 		"github.com": "github", "GitLab.com": "gitlab", "gitlab.corp.example": "gitlab",
-		"github.corp.example": "github", "bitbucket.org": "", "git.example": "",
+		"github.corp.example": "github", "bitbucket.org": "bitbucket", "bitbucket.corp.example": "", "git.example": "",
 	} {
 		if got := GuessProvider(host); got != want {
 			t.Errorf("GuessProvider(%q) = %q, want %q", host, got, want)

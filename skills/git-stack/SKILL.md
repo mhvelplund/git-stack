@@ -6,7 +6,7 @@ description: Use when working with stacked pull requests (or GitLab merge reques
 # git stack
 
 `git stack` manages a stack of branches on top of a trunk (usually `main`). Each layer is a branch with any number of
-commits and, on GitHub or GitLab, one pull request (merge request) targeting the layer below it. On other hosts it
+commits and, on GitHub, GitLab or Bitbucket Cloud, one pull request (merge request) targeting the layer below it. On other hosts it
 manages the branches with plain git and opens no PRs.
 
 ## Everyday flow
