@@ -37,9 +37,14 @@ type Auth func(req *http.Request)
 // host, as `git credential fill` does.
 type GitCredential func(host string) (user, password string, err error)
 
+// accessTokenUser is the user name git uses with a workspace, project or
+// repository access token; the REST API takes such a token only as Bearer.
+const accessTokenUser = "x-token-auth"
+
 // Credentials picks the first credential available, in order:
 // BITBUCKET_TOKEN (Bearer), BITBUCKET_EMAIL with BITBUCKET_API_TOKEN (Basic),
-// then git's credential helpers for bitbucket.org (Basic).
+// then git's credential helpers for bitbucket.org (Basic, or Bearer for an
+// access token stored under git's x-token-auth user).
 func Credentials(getenv func(string) string, git GitCredential) (Auth, error) {
 	if tok := getenv("BITBUCKET_TOKEN"); tok != "" {
 		return func(req *http.Request) { req.Header.Set("Authorization", "Bearer "+tok) }, nil
@@ -49,6 +54,9 @@ func Credentials(getenv func(string) string, git GitCredential) (Auth, error) {
 	}
 	if git != nil {
 		if user, pass, err := git(Host); err == nil && user != "" && pass != "" {
+			if user == accessTokenUser {
+				return func(req *http.Request) { req.Header.Set("Authorization", "Bearer "+pass) }, nil
+			}
 			return func(req *http.Request) { req.SetBasicAuth(user, pass) }, nil
 		}
 	}

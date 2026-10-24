@@ -477,6 +477,10 @@ func TestCredentialsOrder(t *testing.T) {
 	if got := header(map[string]string{"BITBUCKET_EMAIL": "e@x"}, git); got != basic("gituser", "gitpass") {
 		t.Errorf("git credential: %q", got)
 	}
+	token := func(string) (string, string, error) { return "x-token-auth", "repotok", nil }
+	if got := header(nil, token); got != "Bearer repotok" {
+		t.Errorf("git access token: %q", got)
+	}
 	none := func(string) (string, string, error) { return "", "", errors.New("none") }
 	if got := header(nil, none); got != "error: "+protocol.CodeAuth {
 		t.Errorf("no credentials: %q", got)
