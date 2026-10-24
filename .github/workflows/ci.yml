@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The toolchain comes from mise.toml. Only the tools CI needs are installed:
+# gh, glab, azure-cli and the git-stack binaries are for working on the
+# repository by hand.
+env:
+  MISE_EXEC_AUTO_INSTALL: 'false'
+  MISE_TASK_RUN_AUTO_INSTALL: 'false'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # tags for `git describe` in the version ldflags
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.18
+          install_args: go golangci-lint
+      - run: mise run check
+
+  dist:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.18
+          install_args: go golangci-lint
+      - run: mise run dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
