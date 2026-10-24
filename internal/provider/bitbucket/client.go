@@ -56,8 +56,8 @@ func Credentials(getenv func(string) string, git GitCredential) (Auth, error) {
 }
 
 // gitCredentialTimeout bounds `git credential fill`, in case a helper waits
-// for input despite being told not to.
-const gitCredentialTimeout = 15 * time.Second
+// for input despite being told not to. A variable so tests can shorten it.
+var gitCredentialTimeout = 15 * time.Second
 
 // ExecGitCredential runs `git credential fill`, never prompting: with no
 // stored credential, git would otherwise ask through GIT_ASKPASS (an editor's
@@ -68,6 +68,9 @@ func ExecGitCredential(host string) (string, string, error) {
 	cmd := exec.CommandContext(ctx, "git", "-c", "credential.interactive=never", "-c", "core.askPass=", "credential", "fill")
 	cmd.Stdin = strings.NewReader("protocol=https\nhost=" + host + "\n\n")
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0", "GCM_INTERACTIVE=never", "GIT_ASKPASS=", "SSH_ASKPASS=")
+	// A helper killed along with git can outlive it and hold its output pipes
+	// open; stop waiting for them shortly after the timeout.
+	cmd.WaitDelay = time.Second
 	out, err := cmd.Output()
 	if err != nil {
 		return "", "", err
