@@ -23,12 +23,12 @@ const apiVersion = "7.1"
 // Runner executes az with args and returns stdout.
 type Runner func(args ...string) ([]byte, error)
 
-// ExecRunner runs the az binary. The azure-devops extension is installed on
-// first use without asking.
+// ExecRunner runs the az binary. It never installs extensions: without the
+// azure-devops extension az fails at once, and classify says how to add it.
 func ExecRunner(args ...string) ([]byte, error) {
 	cmd := exec.Command("az", args...)
 	cmd.Env = append(os.Environ(),
-		"AZURE_EXTENSION_USE_DYNAMIC_INSTALL=yes_without_prompt",
+		"AZURE_EXTENSION_USE_DYNAMIC_INSTALL=no",
 		"AZURE_CORE_ONLY_SHOW_ERRORS=true",
 		"AZURE_CORE_NO_COLOR=true",
 		"AZURE_CORE_COLLECT_TELEMETRY=false",
@@ -215,6 +215,8 @@ func classify(err error) error {
 	msg := err.Error()
 	low := strings.ToLower(msg)
 	switch {
+	case strings.Contains(low, "misspelled or not recognized"):
+		return protocol.Errorf(protocol.CodeFailure, "%s (the azure-devops extension is missing: run `az extension add --name azure-devops`, then `az devops login`)", msg)
 	case strings.Contains(msg, "TF401180") || strings.Contains(msg, "TF401019") || strings.Contains(low, "does not exist") || strings.Contains(low, "not found"):
 		return protocol.Errorf(protocol.CodeNotFound, "%s", msg)
 	case strings.Contains(msg, "TF400813") || strings.Contains(low, "az login") || strings.Contains(low, "az devops login") ||

@@ -47,9 +47,15 @@ This covers every command of gh-stack v0.2.1. Every command takes `--provider` (
 - For Bitbucket Cloud: credentials in `BITBUCKET_TOKEN` (a workspace, project or repository access token), or in
   `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an Atlassian API token with Bitbucket scopes), or a `bitbucket.org`
   credential stored in git's credential helper
-- For Azure DevOps: the [Azure CLI](https://learn.microsoft.com/cli/azure/) (`az`), logged in with `az login` or
-  `az devops login`; its `azure-devops` extension is installed on first use. Retargeting PRs and rebase merges also
-  need `AZURE_DEVOPS_EXT_PAT` unless the organization accepts the `az login` identity (see [Providers](#providers))
+- For Azure DevOps: the [Azure CLI](https://learn.microsoft.com/cli/azure/) (`az`) with its `azure-devops`
+  extension, logged in with a personal access token (PAT), and the same PAT exported as `AZURE_DEVOPS_EXT_PAT` (see
+  [Providers](#providers)):
+
+  ```sh
+  az extension add --name azure-devops
+  az devops login --organization https://dev.azure.com/<org>   # paste the PAT
+  export AZURE_DEVOPS_EXT_PAT=<the same PAT>                     # PowerShell: $env:AZURE_DEVOPS_EXT_PAT = "<PAT>"
+  ```
 
 ## Installation
 
@@ -147,12 +153,14 @@ itself. It takes the first credential it finds: `BITBUCKET_TOKEN` (sent as a Bea
 linked by URL, and the stack block is hidden as a Markdown link reference. Bitbucket Cloud has no auto-merge, so
 `merge` merges each PR at once and fails if checks or approvals are missing. Bitbucket Data Center is not supported.
 
-On Azure DevOps, git-stack works through `az` and its `azure-devops` extension, with `az`'s login. `az` cannot change
-a PR's target branch or complete it with a rebase, so for those two operations the provider calls the REST API
-directly. It authenticates with `AZURE_DEVOPS_EXT_PAT` (a personal access token with Code read and write scope) if
-set, and otherwise with an access token for the `az login` identity, which organizations backed by a Microsoft
-account may refuse. Every stack of two or more PRs needs retargeting when its bottom PR merges, so set the variable
-if `sync` or `merge` report an authentication error. When policies (reviewers, builds) block completion, `merge`
+On Azure DevOps, git-stack works through `az` and its `azure-devops` extension (`az repos pr`), with `az`'s login.
+It does not install the extension; without it, commands fail with the `az extension add` command to run. `az`
+cannot change a PR's target branch or complete it with a rebase, so for those two operations the provider calls the
+REST API directly. `az devops login` stores the PAT where git-stack cannot read it, so export the same PAT as
+`AZURE_DEVOPS_EXT_PAT` (Code read and write scope). Without it, the provider tries an access token for the `az login`
+identity, which organizations backed by a Microsoft account refuse. Every stack of two or more PRs needs
+retargeting when its bottom PR merges, so `sync` and `merge` report an authentication error until the variable is
+set. When policies (reviewers, builds) block completion, `merge`
 sets the PR to auto-complete and waits. PRs are referenced as `!12`, and descriptions are limited to 4000 characters.
 
 ### Writing a provider
