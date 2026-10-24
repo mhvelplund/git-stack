@@ -407,6 +407,23 @@ func TestMergeFollowsLocationHeader(t *testing.T) {
 	}
 }
 
+func TestMergeTaskNotSucceededIsFailure(t *testing.T) {
+	f := newFake(t)
+	id := f.addPR("OPEN", "feat", "main", nil)
+	f.merge = func(int, map[string]any) (int, any) {
+		return http.StatusAccepted, map[string]any{"task_status": "PENDING", "links": map[string]any{"self": map[string]any{"href": f.srv.URL + "/task-status/3"}}}
+	}
+	f.tasks["3"] = []any{map[string]any{"task_status": "STOPPED"}}
+	p := provider(t, f)
+	if _, err := p.Merge(id, protocol.MethodMerge, ""); protocol.CodeOf(err) != protocol.CodeFailure || !strings.Contains(err.Error(), "STOPPED") {
+		t.Fatalf("Merge with stopped task = %v", err)
+	}
+	f.merge = func(int, map[string]any) (int, any) { return http.StatusAccepted, locationOnly("") }
+	if _, err := p.Merge(id, protocol.MethodMerge, ""); err == nil || !strings.Contains(err.Error(), "no task") {
+		t.Fatalf("Merge without a task link = %v", err)
+	}
+}
+
 func TestMergeRefusedIsFailure(t *testing.T) {
 	f := newFake(t)
 	id := f.addPR("OPEN", "feat", "main", nil)
