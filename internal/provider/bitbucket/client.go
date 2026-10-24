@@ -279,7 +279,13 @@ func (c *Client) GetPR(id int) (*PR, error) {
 	return &pr, nil
 }
 
-// ListPRs returns the pull requests matching the BBQL query q, newest first.
-func (c *Client) ListPRs(q string, first bool) ([]*PR, error) {
-	return list[*PR](c, c.prs(), url.Values{"q": {q}, "sort": {"-created_on"}, "pagelen": {"50"}}, first)
+// ListPRs returns the pull requests in one of states matching the BBQL query
+// q, newest first. Bitbucket returns only open pull requests unless states
+// are given; a state condition in q does not widen that.
+func (c *Client) ListPRs(q string, first bool, states ...string) ([]*PR, error) {
+	query := url.Values{"q": {q}, "sort": {"-created_on"}, "pagelen": {"50"}}
+	if len(states) > 0 {
+		query["state"] = states
+	}
+	return list[*PR](c, c.prs(), query, first)
 }

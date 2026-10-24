@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -157,9 +158,14 @@ func str(pr map[string]any, keys ...string) string {
 }
 
 // list evaluates the BBQL conditions the provider sends; repeated state
-// conditions are alternatives.
+// conditions are alternatives. As on Bitbucket, only open PRs are listed
+// unless state parameters ask for others.
 func (f *fakeBitbucket) list(r *http.Request) any {
 	conds := condRe.FindAllStringSubmatch(r.URL.Query().Get("q"), -1)
+	states := r.URL.Query()["state"]
+	if len(states) == 0 {
+		states = []string{"OPEN"}
+	}
 	var ids []int
 	for id := range f.prs {
 		ids = append(ids, id)
@@ -183,7 +189,8 @@ func (f *fakeBitbucket) list(r *http.Request) any {
 				ok = ok && strings.Contains(strings.ToLower(str(pr, "description")), strings.ToLower(want))
 			}
 		}
-		if ok && (!sawState || stateOK) {
+		state, _ := pr["state"].(string)
+		if ok && (!sawState || stateOK) && slices.Contains(states, state) {
 			values = append(values, pr)
 		}
 	}
