@@ -26,6 +26,7 @@ func (h *harness) assertStacked(lower, upper, ownCommits string) {
 }
 
 func TestRebaseOntoMovedTrunk(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "b")
 	upstream := h.repo.PushFromElsewhere("main", "up.txt", "up\n", "upstream change")
@@ -48,6 +49,7 @@ func TestRebaseOntoMovedTrunk(t *testing.T) {
 }
 
 func TestRebaseAfterAmendingLowerLayer(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended")
@@ -73,6 +75,7 @@ func conflictSetup(t *testing.T) *harness {
 }
 
 func TestRebaseConflictContinue(t *testing.T) {
+	t.Parallel()
 	h := conflictSetup(t)
 	r := h.run("rebase", "--no-trunk")
 	if exitcode.Of(r.e) != exitcode.RebaseConflict {
@@ -106,6 +109,7 @@ func TestRebaseConflictContinue(t *testing.T) {
 }
 
 func TestRebaseAbortRestoresEverything(t *testing.T) {
+	t.Parallel()
 	h := conflictSetup(t)
 	before := map[string]string{"a": h.sha("a"), "b": h.sha("b"), "c": h.sha("c")}
 	if got := exitcode.Of(h.run("rebase", "--no-trunk").e); got != exitcode.RebaseConflict {
@@ -126,6 +130,7 @@ func TestRebaseAbortRestoresEverything(t *testing.T) {
 }
 
 func TestRebaseSkipsSquashMergedLayer(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	// a's change lands on the remote trunk as a squash commit.
 	h.repo.PushFromElsewhere("main", "a.txt", "a\n", "Squashed a (!1)")
@@ -140,6 +145,7 @@ func TestRebaseSkipsSquashMergedLayer(t *testing.T) {
 }
 
 func TestRebaseRanges(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended")
@@ -161,6 +167,7 @@ func TestRebaseRanges(t *testing.T) {
 }
 
 func TestRebaseInOtherWorktree(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended")
@@ -184,6 +191,7 @@ func TestRebaseInOtherWorktree(t *testing.T) {
 }
 
 func TestRebasePreserveDates(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended", "--date=2001-01-01T00:00:00Z")
@@ -198,6 +206,7 @@ func TestRebasePreserveDates(t *testing.T) {
 // a was squash-merged on GitLab (not yet known locally) and b conflicts with
 // the trunk: after resolving, b's base is the trunk and a stays merged.
 func TestRebaseContinueKeepsMergedFlags(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	h.repo.Git("checkout", "--quiet", "b")
@@ -222,6 +231,7 @@ func TestRebaseContinueKeepsMergedFlags(t *testing.T) {
 // After `git rebase --abort` by hand, --continue rebases the layer again
 // instead of reporting it done.
 func TestRebaseContinueAfterManualAbort(t *testing.T) {
+	t.Parallel()
 	h := conflictSetup(t)
 	if r := h.run("rebase", "--no-trunk"); exitcode.Of(r.e) != exitcode.RebaseConflict {
 		t.Fatalf("exit %d: %v", exitcode.Of(r.e), r.e)
@@ -239,6 +249,7 @@ func TestRebaseContinueAfterManualAbort(t *testing.T) {
 
 // A paused rebase is aborted while another worktree has uncommitted work.
 func TestRebaseAbortKeepsOtherWorktreeChanges(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "c")
 	h.repo.Commit("a.txt", "from c\n", "c edits a.txt")
@@ -264,6 +275,7 @@ func TestRebaseAbortKeepsOtherWorktreeChanges(t *testing.T) {
 
 // --no-trunk leaves the bottom unmerged layer alone, also above a merged one.
 func TestRebaseNoTrunkKeepsBottomAboveMergedLayer(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	if err := mutateFile(h, func(f *stack.File) { f.Stacks[0].Branches[0].Merged = true }); err != nil {
 		t.Fatal(err)
@@ -279,6 +291,7 @@ func TestRebaseNoTrunkKeepsBottomAboveMergedLayer(t *testing.T) {
 // An MR recorded for a layer that turns out to belong to another branch (an
 // IID from another project) does not make the layer merged.
 func TestRebaseIgnoresMRsOfOtherBranches(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	h.gl.MRs[2].SourceBranch, h.gl.MRs[2].State = "someone-else", "merged"
@@ -290,6 +303,7 @@ func TestRebaseIgnoresMRsOfOtherBranches(t *testing.T) {
 
 // A pushed commit dropped on purpose stays dropped.
 func TestRebaseKeepsDroppedPushedCommit(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("push")
 	h.repo.Git("checkout", "--quiet", "b")

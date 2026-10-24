@@ -21,7 +21,9 @@ func NewRepo(t *testing.T) *Repo {
 	t.Helper()
 	root := t.TempDir()
 	r := &Repo{t: t, Dir: filepath.Join(root, "work"), Origin: filepath.Join(root, "origin.git")}
-	isolateGitConfig(t, root)
+	if isolatedConfig == "" {
+		t.Fatal("testutil.NewRepo needs the package's TestMain to call testutil.Main")
+	}
 	run(t, root, "git", "init", "--quiet", "--bare", "-b", "main", r.Origin)
 	run(t, root, "git", "clone", "--quiet", r.Origin, r.Dir)
 	r.Commit("README.md", "hello\n", "initial")
@@ -30,17 +32,37 @@ func NewRepo(t *testing.T) *Repo {
 	return r
 }
 
-// isolateGitConfig keeps the user's global git config out of tests.
-func isolateGitConfig(t *testing.T, root string) {
-	t.Helper()
-	cfg := filepath.Join(root, "gitconfig")
-	content := "[user]\n\tname = Test\n\temail = test@example.com\n[init]\n\tdefaultBranch = main\n[advice]\n\tdetachedHead = false\n"
-	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
+// isolatedConfig is the global git config Main points git at.
+var isolatedConfig string
+
+// Main runs the package's tests with the user's git config kept out of every
+// git process. It sets the environment once for the whole process, so tests
+// that use NewRepo can call t.Parallel. Call it from TestMain.
+func Main(m *testing.M) {
+	os.Exit(runIsolated(m))
+}
+
+func runIsolated(m *testing.M) int {
+	dir, err := os.MkdirTemp("", "git-stack-test-")
+	if err != nil {
+		panic(err)
 	}
-	t.Setenv("GIT_CONFIG_GLOBAL", cfg)
-	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	t.Setenv("GIT_TEMPLATE_DIR", "")
+	defer func() { _ = os.RemoveAll(dir) }()
+	isolatedConfig = filepath.Join(dir, "gitconfig")
+	content := "[user]\n\tname = Test\n\temail = test@example.com\n[init]\n\tdefaultBranch = main\n[advice]\n\tdetachedHead = false\n"
+	if err := os.WriteFile(isolatedConfig, []byte(content), 0o644); err != nil {
+		panic(err)
+	}
+	for k, v := range map[string]string{
+		"GIT_CONFIG_GLOBAL":   isolatedConfig,
+		"GIT_CONFIG_NOSYSTEM": "1",
+		"GIT_TEMPLATE_DIR":    "",
+	} {
+		if err := os.Setenv(k, v); err != nil {
+			panic(err)
+		}
+	}
+	return m.Run()
 }
 
 // Git runs git in the working clone and returns trimmed stdout.

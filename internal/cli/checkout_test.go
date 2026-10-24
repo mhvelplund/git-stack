@@ -29,6 +29,7 @@ func stacksIn(t *testing.T, r *testutil.Repo) *stack.File {
 }
 
 func TestCheckoutRemoteStackByMR(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	tm := h.teammate()
 
@@ -56,6 +57,7 @@ func TestCheckoutRemoteStackByMR(t *testing.T) {
 }
 
 func TestCheckoutByBranchName(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	tm := h.teammate()
 	if r := h.in(tm, "", false, "checkout", "c"); r.e != nil {
@@ -70,6 +72,7 @@ func TestCheckoutByBranchName(t *testing.T) {
 }
 
 func TestCheckoutInfersStackWithoutBlock(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("push")
 	h.gl.Add(glab.MR{IID: 1, SourceBranch: "a", TargetBranch: "main"})
@@ -86,6 +89,7 @@ func TestCheckoutInfersStackWithoutBlock(t *testing.T) {
 }
 
 func TestCheckoutLocalAndPicker(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.must("checkout", "1")
 	if h.current() != "a" {
@@ -106,6 +110,7 @@ func TestCheckoutLocalAndPicker(t *testing.T) {
 }
 
 func TestUnstack(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.must("unstack", "--local")
 	if len(h.file().Stacks) != 0 {
@@ -128,6 +133,7 @@ func TestUnstack(t *testing.T) {
 }
 
 func TestUnstackCurrent(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.must("unstack")
 	if len(h.file().Stacks) != 0 || strings.Contains(h.gl.MRs[3].Description, forge.Marker) {
@@ -136,6 +142,7 @@ func TestUnstackCurrent(t *testing.T) {
 }
 
 func TestLinkCreatesAndExtends(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.repo.Git("checkout", "--quiet", "-b", "x")
 	h.repo.Commit("x.txt", "x\n", "x1")
@@ -171,6 +178,7 @@ func TestLinkCreatesAndExtends(t *testing.T) {
 }
 
 func TestMergeRemoteOnlyStack(t *testing.T) {
+	t.Parallel()
 	h := mergeable(t)
 	tm := h.teammate()
 	if r := h.in(tm, "", false, "merge", "1", "--yes", "--squash"); r.e != nil {
@@ -185,6 +193,7 @@ func TestMergeRemoteOnlyStack(t *testing.T) {
 }
 
 func TestSwitch(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	if got := exitcode.Of(h.run("switch").e); got != exitcode.InvalidArgs {
 		t.Fatalf("non-interactive: exit %d", got)
@@ -212,6 +221,7 @@ func TestSwitch(t *testing.T) {
 // Inferring a stack from target branches stops at a protected branch: an
 // open main -> production MR is not a layer.
 func TestCheckoutInferenceStopsAtProtectedBranch(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.repo.Git("checkout", "--quiet", "-b", "feature")
 	h.repo.Commit("f.txt", "f\n", "f1")
@@ -228,6 +238,7 @@ func TestCheckoutInferenceStopsAtProtectedBranch(t *testing.T) {
 
 // An MR URL of another project is refused rather than applied to this one.
 func TestMRURLOfOtherProject(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	for _, args := range [][]string{
@@ -246,6 +257,7 @@ func TestMRURLOfOtherProject(t *testing.T) {
 
 // Extending a stack from its top keeps the top MR's target.
 func TestLinkExtendsFromTop(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.repo.Git("checkout", "--quiet", "-b", "x")
 	h.repo.Commit("x.txt", "x\n", "x1")
@@ -271,6 +283,7 @@ func TestLinkExtendsFromTop(t *testing.T) {
 // A teammate checks out a stack whose bottom MR was squash-merged and its
 // branch deleted: the next layer still gets a cut point, so restacks work.
 func TestCheckoutStackWithDeletedMergedBottom(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.must("submit", "--auto")
 	h.gl.MRs[1].State, h.gl.MRs[1].SHA = "merged", h.sha("a")

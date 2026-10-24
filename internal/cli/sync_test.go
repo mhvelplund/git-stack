@@ -19,6 +19,7 @@ func submitted(t *testing.T) *harness {
 }
 
 func TestSyncRebasesOntoMovedTrunk(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.repo.PushFromElsewhere("main", "up.txt", "up\n", "upstream")
 
@@ -34,6 +35,7 @@ func TestSyncRebasesOntoMovedTrunk(t *testing.T) {
 }
 
 func TestSyncWithoutTrunkChangeDoesNotRebase(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	before := h.sha("c")
 	h.must("sync")
@@ -43,6 +45,7 @@ func TestSyncWithoutTrunkChangeDoesNotRebase(t *testing.T) {
 }
 
 func TestSyncAfterSquashMergeAndPrune(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	h.repo.PushFromElsewhere("main", "a.txt", "a\n", "a1 (squashed !1)")
@@ -79,6 +82,7 @@ func TestSyncAfterSquashMergeAndPrune(t *testing.T) {
 }
 
 func TestSyncConflictRestoresEverything(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.repo.PushFromElsewhere("main", "a.txt", "conflicting\n", "upstream edits a.txt")
 	before := map[string]string{"a": h.sha("a"), "b": h.sha("b"), "c": h.sha("c")}
@@ -114,6 +118,7 @@ func teammateAddsLayer(h *harness) {
 }
 
 func TestSyncPullsLayersAddedOnGitLab(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	teammateAddsLayer(h)
 
@@ -129,6 +134,7 @@ func TestSyncPullsLayersAddedOnGitLab(t *testing.T) {
 }
 
 func TestSyncDiverged(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	// GitLab says the stack is a, b, x; locally it is a, b, c.
 	h.gl.Add(glab.MR{IID: 9, Title: "x", SourceBranch: "x", TargetBranch: "b"})
@@ -160,6 +166,7 @@ func TestSyncDiverged(t *testing.T) {
 }
 
 func TestSyncDivergedAdoptRemote(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.gl.Add(glab.MR{IID: 9, Title: "x", SourceBranch: "x", TargetBranch: "b"})
 	info := forge.StackInfo{Trunk: "main", Items: []forge.StackItem{{Number: 1, Branch: "a"}, {Number: 2, Branch: "b"}, {Number: 9, Branch: "x"}}}
@@ -182,6 +189,7 @@ func TestSyncDivergedAdoptRemote(t *testing.T) {
 }
 
 func TestSyncSingleMRSkipsBlocks(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")
@@ -196,6 +204,7 @@ func TestSyncSingleMRSkipsBlocks(t *testing.T) {
 // The current worktree is on the merged bottom layer and the next layer is
 // checked out in another worktree: pruning must not fail the sync.
 func TestSyncPruneWhenNextLayerInOtherWorktree(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	wt := filepath.Join(t.TempDir(), "wt-b")
@@ -215,6 +224,7 @@ func TestSyncPruneWhenNextLayerInOtherWorktree(t *testing.T) {
 
 // A merged layer with commits that never reached GitLab is not deleted.
 func TestSyncPruneKeepsUnmergedCommits(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.repo.Git("checkout", "--quiet", "a")
 	extra := h.repo.Commit("late.txt", "late\n", "follow-up after the merge")
@@ -230,6 +240,7 @@ func TestSyncPruneKeepsUnmergedCommits(t *testing.T) {
 
 // Keeping the local stack does not edit merged MRs.
 func TestSyncKeepLocalLeavesMergedMRsAlone(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.gl.Add(glab.MR{IID: 8, Title: "old", SourceBranch: "old", TargetBranch: "main", State: "merged"})
 	h.gl.Add(glab.MR{IID: 9, Title: "x", SourceBranch: "x", TargetBranch: "b"})
@@ -255,6 +266,7 @@ func TestSyncKeepLocalLeavesMergedMRsAlone(t *testing.T) {
 
 // Adopting GitLab's stack works when a merged layer's branch is gone.
 func TestSyncAdoptRemoteWithDeletedMergedBranch(t *testing.T) {
+	t.Parallel()
 	h := submitted(t)
 	h.gl.Add(glab.MR{IID: 9, Title: "z", SourceBranch: "z", TargetBranch: "main", State: "merged"})
 	info := forge.StackInfo{Trunk: "main", Items: []forge.StackItem{{Number: 9, Branch: "z"}, {Number: 1, Branch: "a"}, {Number: 2, Branch: "b"}, {Number: 3, Branch: "c"}}}
@@ -273,6 +285,7 @@ func TestSyncAdoptRemoteWithDeletedMergedBranch(t *testing.T) {
 // Merged layers dropped from a fully merged stack are not replayed when the
 // new bottom layer, which still contains their commits, is restacked.
 func TestSyncAfterFreshStackOnSquashMergedLayer(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")
@@ -291,6 +304,7 @@ func TestSyncAfterFreshStackOnSquashMergedLayer(t *testing.T) {
 // Keeping the local stack also fixes the block of a single remaining MR, so
 // the next sync does not find the stacks diverged again.
 func TestSyncKeepLocalWithSingleMR(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")

@@ -24,6 +24,7 @@ func (h *harness) files(ref string) string {
 // The editor lists layers top first and starts on c: j moves down to b.
 
 func TestModifyDrop(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	oldB := h.sha("b")
 	if r := h.modify("j", "x", "ctrl+s"); r.e != nil {
@@ -45,6 +46,7 @@ func TestModifyDrop(t *testing.T) {
 }
 
 func TestModifyFoldDownAndUp(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	oldA := h.sha("a")
 	if r := h.modify("j", "d", "ctrl+s"); r.e != nil {
@@ -70,6 +72,7 @@ func TestModifyFoldDownAndUp(t *testing.T) {
 }
 
 func TestModifyReorderAndInsert(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	// Move c below b, then insert "mid" above a.
 	if r := h.modify("J", "j", "I", "m", "i", "d", "enter", "ctrl+s"); r.e != nil {
@@ -90,6 +93,7 @@ func TestModifyReorderAndInsert(t *testing.T) {
 }
 
 func TestModifyRenameKeepsCheckout(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "b")
 	if err := mutateFile(h, func(f *stack.File) { f.Stacks[0].Get("b").CR = &stack.CR{Number: 7} }); err != nil {
@@ -112,6 +116,7 @@ func TestModifyRenameKeepsCheckout(t *testing.T) {
 }
 
 func TestModifyUndoAndCancel(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	before := h.sha("c")
 	r := h.modify("x", "z", "ctrl+s", "q")
@@ -138,6 +143,7 @@ func swapConflict(t *testing.T) *harness {
 }
 
 func TestModifyConflictContinue(t *testing.T) {
+	t.Parallel()
 	h := swapConflict(t)
 	r := h.modify("j", "J", "ctrl+s") // b moves below a
 	if exitcode.Of(r.e) != exitcode.RebaseConflict {
@@ -168,6 +174,7 @@ func TestModifyConflictContinue(t *testing.T) {
 }
 
 func TestModifyConflictAbort(t *testing.T) {
+	t.Parallel()
 	h := swapConflict(t)
 	before := map[string]string{"a": h.sha("a"), "b": h.sha("b"), "c": h.sha("c")}
 	if r := h.modify("j", "J", "ctrl+s"); exitcode.Of(r.e) != exitcode.RebaseConflict {
@@ -188,6 +195,7 @@ func TestModifyConflictAbort(t *testing.T) {
 }
 
 func TestModifyDroppingCurrentChecksOutTop(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	if r := h.modify("x", "ctrl+s"); r.e != nil { // drop c, the current branch
 		t.Fatal(r.e, r.err)
@@ -200,6 +208,7 @@ func TestModifyDroppingCurrentChecksOutTop(t *testing.T) {
 // After `git cherry-pick --abort` by hand, --continue builds the layer again
 // instead of dropping its commits.
 func TestModifyContinueAfterManualAbort(t *testing.T) {
+	t.Parallel()
 	h := swapConflict(t)
 	oldB := h.sha("b")
 	if r := h.modify("j", "J", "ctrl+s"); exitcode.Of(r.e) != exitcode.RebaseConflict {
@@ -220,6 +229,7 @@ func TestModifyContinueAfterManualAbort(t *testing.T) {
 
 // --continue from another worktree finishes the modify where it started.
 func TestModifyContinueFromOtherWorktree(t *testing.T) {
+	t.Parallel()
 	h := swapConflict(t)
 	wt := filepath.Join(t.TempDir(), "wt")
 	h.repo.Git("worktree", "add", "--quiet", "--detach", wt, "main")
@@ -250,6 +260,7 @@ func TestModifyContinueFromOtherWorktree(t *testing.T) {
 
 // The remaining layers were merged on GitLab before modify ran.
 func TestModifyWhenEverythingMergedRemotely(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	h.must("init", "a")
 	h.repo.Commit("a.txt", "a\n", "a1")
@@ -263,6 +274,7 @@ func TestModifyWhenEverythingMergedRemotely(t *testing.T) {
 
 // A bad name is refused in the editor, so the other staged changes survive.
 func TestModifyRefusesExistingBranchNameInEditor(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	// Fold c into b, then try to rename a to "c" (c's branch still exists).
 	r := h.modify("d", "j", "r", "backspace", "c", "enter", "ctrl+s")
@@ -278,6 +290,7 @@ func TestModifyRefusesExistingBranchNameInEditor(t *testing.T) {
 // A layer restacked by hand onto newer parent commits keeps only its own
 // commit when rebuilt.
 func TestModifyAfterManualRestack(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("checkout", "--quiet", "b")
 	h.repo.Commit("b3.txt", "b\n", "b3")

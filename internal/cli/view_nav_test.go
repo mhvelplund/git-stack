@@ -33,6 +33,7 @@ func threeLayers(t *testing.T) *harness {
 }
 
 func TestViewJSON(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	var d viewData
 	if err := json.Unmarshal([]byte(h.must("view", "--json").out), &d); err != nil {
@@ -48,6 +49,7 @@ func TestViewJSON(t *testing.T) {
 }
 
 func TestViewShortAndLong(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	err := mutateFile(h, func(f *stack.File) {
 		f.Stacks[0].Branches[0].CR = &stack.CR{Number: 12, URL: "https://gl/x/-/merge_requests/12"}
@@ -69,6 +71,7 @@ func TestViewShortAndLong(t *testing.T) {
 }
 
 func TestViewOutsideStack(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if got := exitcode.Of(h.run("view").e); got != exitcode.NotInStack {
 		t.Fatalf("exit %d", got)
@@ -76,6 +79,7 @@ func TestViewOutsideStack(t *testing.T) {
 }
 
 func TestNavigation(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	steps := []struct {
 		args []string
@@ -103,6 +107,7 @@ func TestNavigation(t *testing.T) {
 }
 
 func TestNavigationSkipsMerged(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	if err := mutateFile(h, func(f *stack.File) { f.Stacks[0].Branches[1].Merged = true }); err != nil {
 		t.Fatal(err)
@@ -118,6 +123,7 @@ func TestNavigationSkipsMerged(t *testing.T) {
 }
 
 func TestPrintPathAndWorktrees(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	other := filepath.Join(t.TempDir(), "wt-a")
 	h.repo.Git("worktree", "add", "--quiet", other, "a")
@@ -147,6 +153,7 @@ func mutateFile(h *harness, fn func(f *stack.File)) error {
 
 // A layer named like a top-level directory still shows its last commit.
 func TestViewBranchNamedLikeDirectory(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	if err := os.MkdirAll(h.repo.Dir+"/docs", 0o755); err != nil {
 		t.Fatal(err)
@@ -165,6 +172,7 @@ func TestViewBranchNamedLikeDirectory(t *testing.T) {
 
 // A tag named like the checked-out layer does not hide the branch.
 func TestTagNamedLikeLayer(t *testing.T) {
+	t.Parallel()
 	h := threeLayers(t)
 	h.repo.Git("tag", "c", "main")
 	h.repo.Git("tag", "b", "main")

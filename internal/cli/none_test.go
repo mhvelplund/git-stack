@@ -18,6 +18,7 @@ func gitOnly(t *testing.T) *harness {
 }
 
 func TestSubmitWithoutProviderOnlyPushes(t *testing.T) {
+	t.Parallel()
 	h := gitOnly(t)
 	r := h.must("submit", "--auto")
 	for _, b := range []string{"a", "b", "c"} {
@@ -39,6 +40,7 @@ func TestSubmitWithoutProviderOnlyPushes(t *testing.T) {
 }
 
 func TestMergeAndLinkNeedAProvider(t *testing.T) {
+	t.Parallel()
 	h := gitOnly(t)
 	for _, args := range [][]string{{"merge", "--yes"}, {"link", "a", "b"}} {
 		r := h.run(args...)
@@ -52,6 +54,7 @@ func TestMergeAndLinkNeedAProvider(t *testing.T) {
 }
 
 func TestSyncWithoutProviderDetectsMergedLayers(t *testing.T) {
+	t.Parallel()
 	h := gitOnly(t)
 	h.must("push")
 	// a lands on the trunk with its commits intact (fast-forward merge).
@@ -74,6 +77,7 @@ func TestSyncWithoutProviderDetectsMergedLayers(t *testing.T) {
 }
 
 func TestSyncWithoutProviderKeepsUnmergedLayers(t *testing.T) {
+	t.Parallel()
 	h := gitOnly(t)
 	h.must("push")
 	h.repo.PushFromElsewhere("main", "up.txt", "up\n", "upstream")
@@ -86,6 +90,7 @@ func TestSyncWithoutProviderKeepsUnmergedLayers(t *testing.T) {
 	h.assertStacked("main", "a", "1")
 }
 
+// Not parallel: the subtest changes PATH for the whole process.
 func TestExplicitProviderMustBeInstalled(t *testing.T) {
 	h := gitOnly(t)
 	t.Run("missing plugin", func(t *testing.T) {

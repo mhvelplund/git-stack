@@ -9,7 +9,10 @@ import (
 	"gitlab.com/malephex/git-stack/internal/testutil"
 )
 
+func TestMain(m *testing.M) { testutil.Main(m) }
+
 func TestBasics(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 
@@ -65,6 +68,7 @@ func TestBasics(t *testing.T) {
 }
 
 func TestWorktrees(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 	other := filepath.Join(t.TempDir(), "wt")
@@ -92,6 +96,7 @@ func TestWorktrees(t *testing.T) {
 }
 
 func TestConflictDetection(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 	tr.Git("checkout", "--quiet", "-b", "feat")
@@ -111,6 +116,7 @@ func TestConflictDetection(t *testing.T) {
 }
 
 func TestIncludes(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 	tr.Git("checkout", "--quiet", "-b", "feat")
@@ -132,6 +138,7 @@ func TestIncludes(t *testing.T) {
 }
 
 func TestBranchNamesAndTags(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 	tr.Git("checkout", "--quiet", "-b", "release")
@@ -150,6 +157,7 @@ func TestBranchNamesAndTags(t *testing.T) {
 }
 
 func TestCheckoutMissingBranchNamedLikePath(t *testing.T) {
+	t.Parallel()
 	tr := testutil.NewRepo(t)
 	g := &git.Repo{Dir: tr.Dir}
 	tr.Commit("docs/guide.md", "v1\n", "docs")

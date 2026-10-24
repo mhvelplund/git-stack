@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -39,9 +40,15 @@ func (h *harness) now() time.Time {
 	return h.clock
 }
 
+func TestMain(m *testing.M) {
+	if err := os.Setenv("GIT_STACK_HYPERLINKS", "0"); err != nil {
+		panic(err)
+	}
+	testutil.Main(m)
+}
+
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	t.Setenv("GIT_STACK_HYPERLINKS", "0")
 	return &harness{t: t, repo: testutil.NewRepo(t), gl: glabtest.New()}
 }
 
