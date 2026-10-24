@@ -8,7 +8,7 @@ commits**.
 `git stack` is a Git subcommand: put the `git-stack` binary on your `PATH` and Git runs it as `git stack`. Everything
 that touches branches (creating layers, navigating, cascading rebases, pushing, restructuring) is plain `git`, so it
 works the same against any Git server. Pull requests are handled by **provider plugins**. git-stack picks the plugin
-from the remote URL. GitHub and GitLab are supported today; Azure DevOps and Bitbucket are planned. When no provider
+from the remote URL. GitHub, GitLab and Bitbucket Cloud are supported today; Azure DevOps is planned. When no provider
 applies, git-stack still manages the branches and simply opens no pull requests.
 
 `git stack` is a **derivative work of [gh-stack](https://github.com/github/gh-stack)** by GitHub, Inc., released under
@@ -44,11 +44,14 @@ This covers every command of gh-stack v0.2.1. Every command takes `--provider` (
 - Git 2.36 or later, on Windows, Linux or macOS
 - For GitHub: [`gh`](https://cli.github.com), logged in with `gh auth login`
 - For GitLab: [`glab`](https://gitlab.com/gitlab-org/cli), logged in with `glab auth login`
+- For Bitbucket Cloud: credentials in `BITBUCKET_TOKEN` (a workspace, project or repository access token), or in
+  `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an Atlassian API token with Bitbucket scopes), or a `bitbucket.org`
+  credential stored in git's credential helper
 
 ## Installation
 
-git-stack is three binaries: `git-stack` itself and one plugin per provider, `git-stack-github` and
-`git-stack-gitlab`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
+git-stack is four binaries: `git-stack` itself and one plugin per provider, `git-stack-github`, `git-stack-gitlab`
+and `git-stack-bitbucket`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
 
 1. Install the binaries (requires Go, see [Development](#development)):
 
@@ -56,6 +59,7 @@ git-stack is three binaries: `git-stack` itself and one plugin per provider, `gi
    go install gitlab.com/malephex/git-stack/cmd/git-stack@latest
    go install gitlab.com/malephex/git-stack/cmd/git-stack-github@latest
    go install gitlab.com/malephex/git-stack/cmd/git-stack-gitlab@latest
+   go install gitlab.com/malephex/git-stack/cmd/git-stack-bitbucket@latest
    ```
 
    Make sure `$(go env GOPATH)/bin` is on your `PATH`.
@@ -105,13 +109,14 @@ Stack metadata lives in `.git/git-stack` (shared by all worktrees) and is never 
 |----------|----------------------------------------------------|--------------------------|-------------------------------------------------------|
 | `github` | `github.com`, `github.*` hosts, hosts `gh` knows   | `gh`'s login and config  | GitHub's native stacked PRs, plus the description block |
 | `gitlab` | `gitlab.com`, `gitlab.*` hosts, hosts `glab` knows | `glab`                   | The description block                                 |
+| `bitbucket` | `bitbucket.org` (Bitbucket Cloud only)          | the REST API, see below  | The description block                                 |
 | `none`   | anything else, e.g. a local path or unknown server | nothing                  | none: branches only, no PRs                           |
 
 The provider is chosen in this order:
 
 1. the `--provider <name>` flag;
 2. `git config git-stack.provider <name>`, set once per repository (or globally);
-3. the remote's host: `github.com` and `gitlab.com`, and self-hosted servers whose name starts with `github.` or
+3. the remote's host: `github.com`, `gitlab.com` and `bitbucket.org`, and self-hosted servers whose name starts with `github.` or
    `gitlab.`;
 4. any installed plugin that recognises the host (`git-stack-github` and `git-stack-gitlab` claim hosts that `gh` or
    `glab` is logged in to); the answer is remembered for a day in
@@ -130,6 +135,12 @@ number fail with exit code 9.
 
 On GitHub, git-stack also keeps GitHub's native stack in sync. If stacked PRs are not enabled for the repository (or
 on older GitHub Enterprise Server versions), it falls back to the description block alone.
+
+Bitbucket has no CLI like `gh` or `glab` that runs on every platform, so its provider calls the Bitbucket Cloud API
+itself. It takes the first credential it finds: `BITBUCKET_TOKEN` (sent as a Bearer token), `BITBUCKET_EMAIL` with
+`BITBUCKET_API_TOKEN`, or the `bitbucket.org` credential from git's credential helpers (never prompting). PRs are
+linked by URL, and the stack block is hidden as a Markdown link reference. Bitbucket Cloud has no auto-merge, so
+`merge` merges each PR at once and fails if checks or approvals are missing. Bitbucket Data Center is not supported.
 
 ### Writing a provider
 
@@ -164,6 +175,7 @@ Providers in other languages only need to speak the same JSON.
 | `GIT_PAGER`, `PAGER`           | Pager for `view` (default `less -R`).                             |
 | `VISUAL`, `EDITOR`             | Editor for PR descriptions in the `submit` editor (`^e`).         |
 | `GH_TOKEN`, `GH_ENTERPRISE_TOKEN` | Read by the GitHub provider, as by `gh`.                       |
+| `BITBUCKET_TOKEN`, `BITBUCKET_EMAIL`, `BITBUCKET_API_TOKEN` | Credentials of the Bitbucket provider (see [Providers](#providers)). |
 
 ### Agent skill
 

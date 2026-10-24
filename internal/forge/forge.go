@@ -72,6 +72,8 @@ func (f *Forge) HostName() string {
 		return "GitHub"
 	case "gitlab":
 		return "GitLab"
+	case "bitbucket":
+		return "Bitbucket"
 	case None:
 		return f.Repo.Host
 	}
