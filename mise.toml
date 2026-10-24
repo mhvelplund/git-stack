@@ -4,11 +4,11 @@ golangci-lint = "2"
 gh = "latest"
 glab = "latest"
 pre-commit = "4"
-# Used to stack this repo's own MRs until git-stack can do it.
-"github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
-"go:gitlab.com/malephex/git-stack/cmd/git-stack" = "0.1.0"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack-github" = "0.1.0"
-"go:gitlab.com/malephex/git-stack/cmd/git-stack-gitlab" = "0.1.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack" = "0.2.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-github" = "0.2.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-gitlab" = "0.2.0"
+"go:gitlab.com/malephex/git-stack/cmd/git-stack-bitbucket" = "0.2.0"
+"github:Azure/azure-cli" = "latest"
 
 [vars]
 ldflags = "-X=gitlab.com/malephex/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"
