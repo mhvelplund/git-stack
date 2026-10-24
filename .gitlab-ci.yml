@@ -7,6 +7,7 @@
 # See https://docs.gitlab.com/ci/variables/#cicd-variable-precedence
 stages:
 - test
+- build
 - secret-detection
 sast:
   stage: test
@@ -17,3 +18,31 @@ variables:
   SECRET_DETECTION_ENABLED: 'true'
 secret_detection:
   stage: secret-detection
+
+# The toolchain comes from mise.toml. Only the tools CI needs are installed:
+# gh, glab and glab-stax are for working on the repository by hand.
+.mise:
+  image: jdxcode/mise:latest
+  variables:
+    MISE_EXEC_AUTO_INSTALL: 'false'
+    MISE_TASK_RUN_AUTO_INSTALL: 'false'
+  before_script:
+  - command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git)
+  - mise trust --yes
+  - mise install go golangci-lint
+
+check:
+  extends: .mise
+  stage: test
+  script:
+  - mise run check
+
+dist:
+  extends: .mise
+  stage: build
+  script:
+  - mise run dist
+  artifacts:
+    paths:
+    - dist/
+    expire_in: 1 week
