@@ -164,6 +164,13 @@ type apiError struct {
 // into out (unless nil). path is relative to BaseURL, or an absolute URL as
 // found in "next" and "links". It returns the HTTP status.
 func (c *Client) do(method, path string, body, out any) (int, error) {
+	status, _, err := c.doHeader(method, path, body, out)
+	return status, err
+}
+
+// doHeader is do that also returns the response headers, with a Location
+// header resolved to an absolute URL.
+func (c *Client) doHeader(method, path string, body, out any) (int, http.Header, error) {
 	target := path
 	if !strings.Contains(path, "://") {
 		target = strings.TrimSuffix(c.BaseURL, "/") + path
@@ -172,13 +179,13 @@ func (c *Client) do(method, path string, body, out any) (int, error) {
 	if body != nil {
 		data, err := json.Marshal(body)
 		if err != nil {
-			return 0, err
+			return 0, nil, err
 		}
 		rd = bytes.NewReader(data)
 	}
 	req, err := http.NewRequest(method, target, rd)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
@@ -193,22 +200,26 @@ func (c *Client) do(method, path string, body, out any) (int, error) {
 	}
 	resp, err := hc.Do(req)
 	if err != nil {
-		return 0, protocol.Errorf(protocol.CodeFailure, "%s %s: %v", method, path, err)
+		return 0, nil, protocol.Errorf(protocol.CodeFailure, "%s %s: %v", method, path, err)
 	}
 	defer resp.Body.Close()
+	hdr := resp.Header
+	if loc, err := resp.Location(); err == nil {
+		hdr.Set("Location", loc.String())
+	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return resp.StatusCode, protocol.Errorf(protocol.CodeFailure, "%s %s: %v", method, path, err)
+		return resp.StatusCode, hdr, protocol.Errorf(protocol.CodeFailure, "%s %s: %v", method, path, err)
 	}
 	if resp.StatusCode >= 300 {
-		return resp.StatusCode, statusError(method, path, resp.StatusCode, data)
+		return resp.StatusCode, hdr, statusError(method, path, resp.StatusCode, data)
 	}
 	if out != nil && len(data) > 0 {
 		if err := json.Unmarshal(data, out); err != nil {
-			return resp.StatusCode, protocol.Errorf(protocol.CodeFailure, "%s %s: decoding response: %v", method, path, err)
+			return resp.StatusCode, hdr, protocol.Errorf(protocol.CodeFailure, "%s %s: decoding response: %v", method, path, err)
 		}
 	}
-	return resp.StatusCode, nil
+	return resp.StatusCode, hdr, nil
 }
 
 // statusError maps an HTTP error to a protocol error code.

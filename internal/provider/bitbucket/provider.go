@@ -254,18 +254,26 @@ func (p *Provider) Merge(n int, method, sha string) (*protocol.CR, error) {
 		return nil, protocol.Errorf(protocol.CodeFailure, "PR %d moved on Bitbucket since it was pushed (head %s, expected %s)", n, head, sha)
 	}
 	var raw json.RawMessage
-	status, err := p.C.do(http.MethodPost, p.C.pr(n)+"/merge", map[string]any{"merge_strategy": strategy, "close_source_branch": false}, &raw)
+	status, hdr, err := p.C.doHeader(http.MethodPost, p.C.pr(n)+"/merge", map[string]any{"merge_strategy": strategy, "close_source_branch": false}, &raw)
 	if err != nil {
 		return nil, err
 	}
 	if status != http.StatusAccepted {
 		return p.GetCR(n)
 	}
-	var task mergeTask
-	if err := json.Unmarshal(raw, &task); err != nil {
-		return nil, protocol.Errorf(protocol.CodeFailure, "decoding merge task of PR %d: %v", n, err)
+	// A merge that outlasts Bitbucket's timeout answers 202 with the
+	// task-status URL in the Location header; the body may be empty.
+	task := mergeTask{TaskStatus: "PENDING"}
+	if len(raw) > 0 {
+		if err := json.Unmarshal(raw, &task); err != nil {
+			return nil, protocol.Errorf(protocol.CodeFailure, "decoding merge task of PR %d: %v", n, err)
+		}
 	}
-	href := task.Links.Self.Href
+	href := hdr.Get("Location")
+	if href == "" {
+		href = task.Links.Self.Href
+	}
+	// A failed task answers with an HTTP error, which do returns.
 	for i := 0; task.TaskStatus == "PENDING" && href != ""; i++ {
 		if i == mergePolls {
 			return nil, protocol.Errorf(protocol.CodeFailure, "timed out waiting for Bitbucket to merge PR %d", n)

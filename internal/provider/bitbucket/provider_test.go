@@ -81,10 +81,18 @@ func (f *fakeBitbucket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var body map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	status, out := f.route(r, body)
+	if loc, ok := out.(locationOnly); ok {
+		w.Header().Set("Location", string(loc))
+		w.WriteHeader(status)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(out)
 }
+
+// locationOnly answers with an empty body and this Location header.
+type locationOnly string
 
 func notFound() (int, any) {
 	return http.StatusNotFound, map[string]any{"type": "error", "error": map[string]any{"message": "Not found"}}
@@ -376,6 +384,26 @@ func TestMergeWaitsForAsyncTask(t *testing.T) {
 	}
 	if polls != 2 {
 		t.Fatalf("task polls = %d, calls %v", polls, f.calls)
+	}
+}
+
+func TestMergeFollowsLocationHeader(t *testing.T) {
+	f := newFake(t)
+	id := f.addPR("OPEN", "feat", "main", nil)
+	f.merge = func(id int, _ map[string]any) (int, any) {
+		f.prs[id]["state"] = "MERGED"                              // as it will be once the task succeeds
+		return http.StatusAccepted, locationOnly("/task-status/2") // relative, and no body
+	}
+	f.tasks["2"] = []any{
+		map[string]any{"task_status": "PENDING"},
+		map[string]any{"task_status": "SUCCESS"},
+	}
+	cr, err := provider(t, f).Merge(id, protocol.MethodMerge, "")
+	if err != nil || !cr.Merged() {
+		t.Fatalf("Merge = %+v, %v", cr, err)
+	}
+	if len(f.tasks["2"]) != 0 {
+		t.Fatalf("task not polled to the end: %v", f.calls)
 	}
 }
 
