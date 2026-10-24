@@ -21,17 +21,18 @@ secret_detection:
 
 # The toolchain comes from mise.toml. Only the tools CI needs are installed:
 # gh, glab and glab-stax are for working on the repository by hand.
+#
+# jdxcode/mise is built FROM scratch (just the mise binary, no shell or git),
+# so jobs run in a small Debian image with curl and git, and install mise.
 .mise:
-  # The image's entrypoint is mise itself, which would turn the runner's
-  # `sh -c <script>` into `mise sh -c <script>`.
-  image:
-    name: jdxcode/mise:latest
-    entrypoint: [""]
+  image: buildpack-deps:bookworm-scm
   variables:
+    MISE_VERSION: v2026.10.18
     MISE_EXEC_AUTO_INSTALL: 'false'
     MISE_TASK_RUN_AUTO_INSTALL: 'false'
   before_script:
-  - command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git)
+  - curl -fsSL https://mise.run | sh
+  - export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
   - mise trust --yes
   - mise install go golangci-lint
 
