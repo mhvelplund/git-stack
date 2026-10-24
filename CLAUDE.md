@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `git-stack` is a Go Git subcommand (`git stack <cmd>`) for stacked PRs, a derivative of gh-stack v0.2.1 (CLI
 reproduced; the core was originally ported from glab-stax). Branch operations are plain git; PR operations go
-through external provider plugins (`git-stack-github`, `git-stack-gitlab`, `git-stack-bitbucket`). Must work on
-Windows, Linux and macOS. User-facing docs: README.md. Agent usage of the CLI:
+through external provider plugins (`git-stack-github`, `git-stack-gitlab`, `git-stack-bitbucket`,
+`git-stack-ado`). Must work on Windows, Linux and macOS. User-facing docs: README.md. Agent usage of the CLI:
 `skills/git-stack/SKILL.md`.
 
 ## Commands
@@ -56,10 +56,12 @@ mise run dist       # cross-compile into dist/ via scripts/dist
   "PR"/"#"; static help text stays neutral ("PR", "the host").
 - Provider `none`: `submit` only pushes; `sync` detects merges by ancestry (`engine.MarkMergedByAncestry`);
   `merge`, `link` and by-number lookups fail with exit code 9.
-- `internal/provider/{github,gitlab,bitbucket}` – implementations. GitHub's `github.go`/`merge_async.go` are copied
-  verbatim from gh-stack (`provider.go` is the adapter; it also syncs GitHub's native Stacks API, falling back to
+- `internal/provider/{github,gitlab,bitbucket,ado}` – implementations. GitHub's `github.go`/`merge_async.go` are
+  copied verbatim from gh-stack (`provider.go` is the adapter; it also syncs GitHub's native Stacks API, falling back to
   block-only on 404). GitLab wraps `glab`; `glabtest/` is a fake GitLab API. Bitbucket Cloud calls the REST API
-  directly with `net/http`.
+  directly with `net/http`. Azure DevOps uses `az` (`devops invoke` for reads, `repos pr create/update` for writes,
+  text passed as `@file`); `az devops invoke` cannot write PRs and `az repos` cannot retarget or rebase-merge, so
+  those two go to REST (`ado/rest.go`).
 - `internal/cli` – cobra commands; `App` (`app.go`) holds repo/store/forge, and `mutate` does locked metadata edits.
 - `internal/engine` – rebase, modify and sync-reconcile logic.
 - `internal/stack` – metadata in `.git/git-stack` (shared across worktrees, never committed), with file locking
@@ -76,7 +78,7 @@ mise run dist       # cross-compile into dist/ via scripts/dist
   `LocalTransport` and the `glabtest` fake. `harness.resolve = true` uses real resolution, which yields provider
   `none` for the local origin (see `none_test.go`). `harness.keys` scripts TUI input.
 - `internal/forge` `TestExecPlugin` builds the real `git-stack-gitlab` binary and talks to it over stdio.
-- Bitbucket tests use an `httptest` fake.
+- Bitbucket tests use an `httptest` fake; ADO tests fake `az` plus an `httptest` TLS server for the REST calls.
 
 ## Gotchas
 
