@@ -1,0 +1,3 @@
+[tools]
+"github:mhvelplund/glab-stax" = { version = "0.1.0", asset_pattern = "glab-stax.exe" }
+glab = "latest"
