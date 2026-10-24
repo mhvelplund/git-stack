@@ -31,7 +31,25 @@ func ParseRemoteURL(raw string) (Repo, error) {
 	if host == "" || !strings.Contains(path, "/") {
 		return Repo{}, fmt.Errorf("cannot parse remote URL %q", raw)
 	}
+	host, path = azureSSH(host, path)
 	return Repo{RemoteURL: raw, Host: host, Path: path}, nil
+}
+
+// azureSSH rewrites an Azure DevOps ssh remote (v3/<org>/<project>/<repo>)
+// to the host and path of its https form (<org>/<project>/_git/<repo>), the
+// path that pull request URLs carry.
+func azureSSH(host, path string) (string, string) {
+	segs := strings.Split(path, "/")
+	if len(segs) != 4 || segs[0] != "v3" {
+		return host, path
+	}
+	switch strings.ToLower(host) {
+	case "ssh.dev.azure.com":
+		return "dev.azure.com", segs[1] + "/" + segs[2] + "/_git/" + segs[3]
+	case "vs-ssh.visualstudio.com":
+		return segs[1] + ".visualstudio.com", segs[2] + "/_git/" + segs[3]
+	}
+	return host, path
 }
 
 // SSHHostname resolves an ssh config alias (e.g. "work-gitlab") to its real
