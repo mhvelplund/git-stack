@@ -12,7 +12,7 @@ import (
 
 	"github.com/cli/go-gh/v2/pkg/api"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // fakeGitHub answers the REST and GraphQL calls the provider makes.

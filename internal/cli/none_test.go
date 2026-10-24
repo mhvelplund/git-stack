@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 // gitOnly returns three layers in a repository whose origin is a local path:

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/malephex/git-stack/internal/tui"
+	"github.com/mhvelplund/git-stack/internal/tui"
 )
 
 // withPager sends what fn writes through $GIT_PAGER, $PAGER or `less -R`

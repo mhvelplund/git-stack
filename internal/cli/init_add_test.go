@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 func TestInitCreatesBranches(t *testing.T) {

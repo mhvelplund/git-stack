@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // Transport runs one operation of a provider plugin.

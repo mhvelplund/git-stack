@@ -65,11 +65,11 @@ git-stack is five binaries: `git-stack` itself and one plugin per provider, `git
 1. Install the binaries (requires Go, see [Development](#development)):
 
    ```sh
-   go install gitlab.com/malephex/git-stack/cmd/git-stack@latest
-   go install gitlab.com/malephex/git-stack/cmd/git-stack-github@latest
-   go install gitlab.com/malephex/git-stack/cmd/git-stack-gitlab@latest
-   go install gitlab.com/malephex/git-stack/cmd/git-stack-bitbucket@latest
-   go install gitlab.com/malephex/git-stack/cmd/git-stack-ado@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-github@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-gitlab@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-bitbucket@latest
+   go install github.com/mhvelplund/git-stack/cmd/git-stack-ado@latest
    ```
 
    Make sure `$(go env GOPATH)/bin` is on your `PATH`.

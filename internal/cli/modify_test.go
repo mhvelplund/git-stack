@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 // modify runs `modify` with scripted editor keys.

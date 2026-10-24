@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 // Lock serializes mutations across all worktrees of the clone with an OS file

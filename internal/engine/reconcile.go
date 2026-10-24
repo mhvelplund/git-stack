@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 // Relation describes how the stack on the host compares to the local stack.

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // Call is one recorded glab invocation.

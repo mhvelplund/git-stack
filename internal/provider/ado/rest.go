@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // patEnv holds a personal access token, as for the azure-devops extension.

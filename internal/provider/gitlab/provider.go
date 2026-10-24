@@ -1,7 +1,7 @@
 package gitlab
 
 import (
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // Info describes the GitLab provider.

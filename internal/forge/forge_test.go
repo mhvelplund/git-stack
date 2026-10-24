@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 func TestParseRemoteURL(t *testing.T) {

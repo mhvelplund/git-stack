@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/stack"
-	"gitlab.com/malephex/git-stack/internal/tui"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/tui"
 )
 
 func newCheckoutCmd(app *App) *cobra.Command {

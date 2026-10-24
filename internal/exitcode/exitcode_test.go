@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 func TestOf(t *testing.T) {

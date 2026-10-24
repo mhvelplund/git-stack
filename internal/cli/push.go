@@ -3,8 +3,8 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"gitlab.com/malephex/git-stack/internal/engine"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/engine"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 func newPushCmd(app *App) *cobra.Command {

@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/malephex/git-stack/internal/tui"
+	"github.com/mhvelplund/git-stack/internal/tui"
 )
 
 const (
 	// RepoURL is git-stack's home page.
-	RepoURL       = "https://gitlab.com/malephex/git-stack"
-	releasesAPI   = "https://gitlab.com/api/v4/projects/malephex%2Fgit-stack/releases/permalink/latest"
+	RepoURL       = "https://github.com/mhvelplund/git-stack"
+	releasesAPI   = "https://api.github.com/repos/mhvelplund/git-stack/releases/latest"
 	checkInterval = 24 * time.Hour
 )
 

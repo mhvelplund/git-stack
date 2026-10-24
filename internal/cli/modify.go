@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/malephex/git-stack/internal/engine"
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/stack"
-	"gitlab.com/malephex/git-stack/internal/tui"
+	"github.com/mhvelplund/git-stack/internal/engine"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/tui"
 )
 
 func newModifyCmd(app *App) *cobra.Command {

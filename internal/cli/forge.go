@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
 )
 
 // forge returns the forge for remote: the provider from --provider, else

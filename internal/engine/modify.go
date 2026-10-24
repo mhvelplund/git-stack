@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/git"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/git"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 // Layer is one layer of the stack after a modify: Name holds the commits of

@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/malephex/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/forge"
 
-	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
-	"gitlab.com/malephex/git-stack/internal/provider/gitlab/glabtest"
-	"gitlab.com/malephex/git-stack/internal/stack"
-	"gitlab.com/malephex/git-stack/internal/testutil"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/internal/provider/gitlab/glabtest"
+	"github.com/mhvelplund/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/testutil"
 )
 
 type harness struct {

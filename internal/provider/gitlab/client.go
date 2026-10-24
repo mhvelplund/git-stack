@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // Runner executes glab with args and returns stdout.

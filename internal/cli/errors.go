@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 func flagError(_ *cobra.Command, err error) error {

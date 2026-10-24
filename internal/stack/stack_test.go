@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 func sample() *File {

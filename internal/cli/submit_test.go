@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/forge"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
 )
 
 func (h *harness) remoteSHA(branch string) string {

@@ -5,8 +5,8 @@ package main
 import (
 	"github.com/cli/go-gh/v2/pkg/api"
 
-	"gitlab.com/malephex/git-stack/internal/provider/github"
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/internal/provider/github"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 func main() {

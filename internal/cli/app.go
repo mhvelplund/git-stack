@@ -11,11 +11,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/git"
-	"gitlab.com/malephex/git-stack/internal/stack"
-	"gitlab.com/malephex/git-stack/internal/tui"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/git"
+	"github.com/mhvelplund/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/tui"
 )
 
 // App is the environment commands run in. Tests construct it directly.

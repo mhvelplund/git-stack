@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 const (

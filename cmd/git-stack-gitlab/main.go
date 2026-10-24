@@ -2,8 +2,8 @@
 package main
 
 import (
-	"gitlab.com/malephex/git-stack/internal/provider/gitlab"
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module gitlab.com/malephex/git-stack
+module github.com/mhvelplund/git-stack
 
 go 1.26.0
 

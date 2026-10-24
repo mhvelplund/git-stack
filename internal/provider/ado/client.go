@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // apiVersion is the Azure DevOps REST API version used for every call.

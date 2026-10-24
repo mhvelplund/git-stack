@@ -3,8 +3,8 @@ package cli
 import (
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 func TestBadFlagIsInvalidArgs(t *testing.T) {

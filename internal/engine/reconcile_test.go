@@ -3,8 +3,8 @@ package engine
 import (
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 func mkStack(spec ...string) *stack.Stack {

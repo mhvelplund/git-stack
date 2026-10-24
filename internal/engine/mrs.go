@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/git"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/git"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 // SyncMRs refreshes each unmerged layer's PR from the host and marks merged

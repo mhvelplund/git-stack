@@ -14,7 +14,7 @@ import (
 	"sync"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // fakeADO answers the az commands the provider runs, and the REST calls, for

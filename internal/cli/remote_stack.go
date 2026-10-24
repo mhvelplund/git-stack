@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/internal/engine"
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
-	"gitlab.com/malephex/git-stack/internal/git"
-	"gitlab.com/malephex/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/engine"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	"github.com/mhvelplund/git-stack/internal/git"
+	"github.com/mhvelplund/git-stack/internal/stack"
 )
 
 const maxChain = 50

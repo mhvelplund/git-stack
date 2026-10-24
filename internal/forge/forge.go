@@ -5,7 +5,7 @@ package forge
 import (
 	"fmt"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // Type aliases keep the core's code short; the types live in pkg/protocol so

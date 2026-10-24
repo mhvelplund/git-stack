@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/git"
-	"gitlab.com/malephex/git-stack/internal/testutil"
+	"github.com/mhvelplund/git-stack/internal/git"
+	"github.com/mhvelplund/git-stack/internal/testutil"
 )
 
 func TestMain(m *testing.M) { testutil.Main(m) }

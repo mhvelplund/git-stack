@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
 )
 
 // mergeable returns three layers with ready MRs whose merges land on the remote.

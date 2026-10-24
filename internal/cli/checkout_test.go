@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/malephex/git-stack/internal/exitcode"
-	"gitlab.com/malephex/git-stack/internal/forge"
-	glab "gitlab.com/malephex/git-stack/internal/provider/gitlab"
-	"gitlab.com/malephex/git-stack/internal/stack"
-	"gitlab.com/malephex/git-stack/internal/testutil"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/forge"
+	glab "github.com/mhvelplund/git-stack/internal/provider/gitlab"
+	"github.com/mhvelplund/git-stack/internal/stack"
+	"github.com/mhvelplund/git-stack/internal/testutil"
 )
 
 // teammate returns a fresh clone sharing h's fake GitLab.

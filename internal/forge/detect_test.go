@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 // emptyPath leaves only an empty directory on PATH, so no real plugin is found.
@@ -113,7 +113,7 @@ func TestExecPlugin(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		out += ".exe"
 	}
-	build := exec.Command("go", "build", "-o", out, "gitlab.com/malephex/git-stack/cmd/git-stack-gitlab")
+	build := exec.Command("go", "build", "-o", out, "github.com/mhvelplund/git-stack/cmd/git-stack-gitlab")
 	if msg, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("building the plugin: %v\n%s", err, msg)
 	}

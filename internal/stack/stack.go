@@ -2,7 +2,7 @@
 package stack
 
 import (
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 // FormatVersion is the current metadata file format.

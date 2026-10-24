@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/malephex/git-stack/pkg/protocol"
+	"github.com/mhvelplund/git-stack/pkg/protocol"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	// LegacyMarker starts blocks written by glab-stax, which are still read.
 	LegacyMarker = "glab-stax:begin"
 	// RepoURL is git-stack's home page, linked from every block.
-	RepoURL = "https://gitlab.com/malephex/git-stack"
+	RepoURL = "https://github.com/mhvelplund/git-stack"
 )
 
 // Both block styles, and blocks written by glab-stax, are recognised whatever

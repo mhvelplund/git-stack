@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"gitlab.com/malephex/git-stack/internal/cli"
-	"gitlab.com/malephex/git-stack/internal/exitcode"
+	"github.com/mhvelplund/git-stack/internal/cli"
+	"github.com/mhvelplund/git-stack/internal/exitcode"
 )
 
 func main() {
