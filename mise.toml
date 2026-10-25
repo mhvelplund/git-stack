@@ -10,6 +10,7 @@ glab = "latest"
 go = "1.26"
 golangci-lint = "2"
 pre-commit = "4"
+"pipx:commitizen" = "4"
 
 [vars]
 ldflags = "-X=github.com/mhvelplund/git-stack/internal/cli.Version={{exec(command='git describe --tags --always --dirty')}}"

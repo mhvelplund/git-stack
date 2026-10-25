@@ -1,0 +1,13 @@
+# Commitizen: `cz bump` derives the next version from Conventional Commits since
+# the last tag. The release workflow runs it on every push to main.
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "1.0.0"
+version_provider = "commitizen"
+version_scheme = "semver2"
+tag_format = "v$version"
+major_version_zero = false
+update_changelog_on_bump = true
+# The binaries take their version from the tag (see `ldflags` in mise.toml);
+# only the git-stack pins in mise.toml carry it in a file.
+version_files = ["mise.toml:github.com/mhvelplund/git-stack/cmd/git-stack"]

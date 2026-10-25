@@ -32,7 +32,11 @@ mise run dist       # cross-compile into dist/ via scripts/dist
 ## Committing
 
 - Use [Conventional Commits](https://www.conventionalcommits.org) messages, e.g. `fix(bitbucket): ...`,
-  `feat: ...`.
+  `feat: ...`. A commit-msg hook (commitizen) enforces it, because the types drive releases: on every push to
+  `main`, `.github/workflows/release.yml` runs `cz bump` (`feat` → minor, `fix`/`perf` → patch, `!` or
+  `BREAKING CHANGE:` → major; other types release nothing), which commits `bump: ...` (version in `.cz.toml`, the
+  git-stack pins in `mise.toml`, `CHANGELOG.md`), tags `vX.Y.Z` and publishes a GitHub release with the `dist/`
+  binaries. Don't edit those versions or `CHANGELOG.md` by hand.
 - When pre-commit hooks fail, fix the reported problems. Never bypass the hooks (`--no-verify`, `SKIP=...`,
   uninstalling them) unless the user approves it.
 
