@@ -65,6 +65,7 @@ jobs:
           git_email: ${{ steps.bot.outputs.email }}
           commitizen_version: 4.19.3
           changelog_increment_filename: release-notes.md
+          git_redirect_stderr: 'true' # keep git's output out of the release notes
           no_raise: '21' # NO_COMMITS_TO_BUMP: nothing to release
       - name: Released tag
         id: tag
