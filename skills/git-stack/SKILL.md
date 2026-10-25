@@ -33,6 +33,9 @@ git stack merge --yes --squash        # merge bottom-up, restacking between merg
   `git stack rebase` to reproduce the conflict and resolve it as above.
 - `push`, `submit` and `sync` refuse to push a layer whose remote branch has commits the local branch never had (for
   example an applied review suggestion). Integrate them with `git pull --rebase` on that layer, then retry.
+- If git hooks fail on changes unrelated to the work (e.g. old files touched by a rebase), and only if the user agrees
+  to skip them, pass `--no-verify` to that command (`git stack --no-verify submit --auto`). It applies to one
+  invocation only, so pass it again to `--continue`.
 - Never edit the block between `git-stack:begin` and `git-stack:end` in PR descriptions; git-stack rewrites it.
 - For a self-hosted GitHub or GitLab that is not detected, pass `--provider github` or `--provider gitlab`, or set
   `git config git-stack.provider <name>` once. Exit code 9 means the command needs a provider and none applies.

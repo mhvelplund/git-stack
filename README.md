@@ -39,6 +39,12 @@ Work in progress. Available today:
 
 This covers every command of gh-stack v0.2.1. Every command takes `--provider` (see [Providers](#providers)).
 
+Every command also takes `--no-verify`, which runs git without hooks (pre-commit, commit-msg, pre-push, ...). This
+is like `git commit -n` and `git push --no-verify`, for example when a rebase in an old codebase trips hooks over
+unrelated files. The flag applies only to that one command: git-stack passes `core.hooksPath` on git's command line
+and never changes the config, so hooks can't be left off, even if git-stack crashes. A paused rebase or modify
+doesn't remember the flag, so pass it again to `--continue` (`git stack --no-verify rebase --continue`).
+
 ## Requirements
 
 - Git 2.36 or later, on Windows, Linux or macOS
