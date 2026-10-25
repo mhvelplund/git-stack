@@ -62,7 +62,10 @@ This covers every command of gh-stack v0.2.1. Every command takes `--provider` (
 git-stack is five binaries: `git-stack` itself and one plugin per provider, `git-stack-github`, `git-stack-gitlab`,
 `git-stack-bitbucket` and `git-stack-ado`. Install the providers you need next to `git-stack` or anywhere on your `PATH`.
 
-1. Install the binaries (requires Go, see [Development](#development)):
+1. Download the binaries for your platform from the
+   [latest release](https://github.com/mhvelplund/git-stack/releases/latest), named `<name>-<os>-<arch>`, rename
+   each to `<name>` (`<name>.exe` on Windows), make them executable and put them on your `PATH`. `SHA256SUMS` lists
+   their checksums. Or install them with Go (see [Development](#development)):
 
    ```sh
    go install github.com/mhvelplund/git-stack/cmd/git-stack@latest
@@ -234,6 +237,15 @@ mise run dist      # cross-compile for Windows, Linux and macOS into dist/
 ```
 
 To try a build, put `bin/` first on your `PATH` and run `git stack` in any repository.
+
+Releases are automatic. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org) (a
+commit-msg hook checks them). On every push to `main`, the Release workflow runs CI and then
+[commitizen](https://commitizen-tools.github.io/commitizen/): `feat` commits bump the minor version, `fix` and
+`perf` the patch version and breaking changes (`feat!:` or a `BREAKING CHANGE:` footer) the major version. A bump
+updates `.cz.toml`, the git-stack pins in `mise.toml` and `CHANGELOG.md`, tags `vX.Y.Z` and publishes a GitHub
+release with the `mise run dist` binaries. The workflow pushes with a token from a GitHub App with read and write
+access to the repository contents: set its client ID as the `RELEASE_APP_CLIENT_ID` Actions variable and its
+private key as the `RELEASE_APP_PRIVATE_KEY` Actions secret.
 
 ## License
 
