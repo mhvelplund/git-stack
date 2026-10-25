@@ -78,6 +78,8 @@ func belongs(g *git.Repo, branch string, mr *forge.CR) bool {
 // if that value was integrated locally (git.Repo.Includes): a commit someone
 // else pushed, such as an applied review suggestion, is refused rather than
 // overwritten, even right after a fetch has refreshed the tracking refs.
+// Remote commits whose changes the branch already has (git.Repo.HasPatches),
+// such as GitHub restacking a native stack after a merge, are overwritten.
 func Push(g *git.Repo, remote string, branches []string) error {
 	if len(branches) == 0 {
 		return nil
@@ -87,7 +89,7 @@ func Push(g *git.Repo, remote string, branches []string) error {
 	for _, b := range branches {
 		lease := ""
 		if sha, err := g.RevParse("refs/remotes/" + remote + "/" + b); err == nil {
-			if !g.Includes(b, sha) {
+			if !g.Includes(b, sha) && !g.HasPatches(b, sha) {
 				foreign = append(foreign, b)
 				continue
 			}

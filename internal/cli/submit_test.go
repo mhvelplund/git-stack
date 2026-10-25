@@ -35,6 +35,16 @@ func TestPush(t *testing.T) {
 	if !strings.HasPrefix(h.remoteSHA("c"), h.sha("c")) {
 		t.Fatal("rebased c not pushed")
 	}
+	// The host restacked c itself (same changes, new commits): push takes over.
+	host := h.repo.Clone()
+	host.Git("checkout", "--quiet", "c")
+	host.Git("commit", "--quiet", "--amend", "-m", "c1 restacked by the host")
+	host.Git("push", "--quiet", "--force", "origin", "c")
+	h.repo.Git("fetch", "--quiet")
+	h.must("push")
+	if !strings.HasPrefix(h.remoteSHA("c"), h.sha("c")) {
+		t.Fatal("push refused a remote c that holds the same changes")
+	}
 	// Someone else pushed to b: the lease must refuse to clobber it.
 	h.repo.PushFromElsewhere("b", "theirs.txt", "x\n", "their commit")
 	h.repo.Git("commit", "--quiet", "--amend", "-m", "a1 amended again")

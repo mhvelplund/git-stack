@@ -342,6 +342,18 @@ func (r *Repo) Includes(branch, sha string) bool {
 	return false
 }
 
+// HasPatches reports whether every commit sha has and the local branch lacks
+// makes a change the branch already has, as when a host rebased the branch
+// onto the same base itself. Merge commits never count.
+func (r *Repo) HasPatches(branch, sha string) bool {
+	rng := "refs/heads/" + branch + "..." + sha
+	if out, err := r.Run("rev-list", "--right-only", "--merges", rng); err != nil || out != "" {
+		return false
+	}
+	out, err := r.Run("rev-list", "--right-only", "--cherry-pick", rng)
+	return err == nil && out == ""
+}
+
 // maxReflogChecks bounds the ancestry checks Includes makes against reflog entries.
 const maxReflogChecks = 30
 
