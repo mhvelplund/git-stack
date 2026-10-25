@@ -1,3 +1,9 @@
+## v1.1.0 (2026-10-25)
+
+### Feat
+
+- **cli**: add --no-verify to run git without hooks
+
 ## v1.0.2 (2026-10-25)
 
 ### Fix
