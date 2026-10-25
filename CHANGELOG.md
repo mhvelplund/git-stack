@@ -1,3 +1,9 @@
+## v1.0.2 (2026-10-25)
+
+### Fix
+
+- **engine**: push over a remote branch the host restacked itself
+
 ## v1.0.1 (2026-10-25)
 
 ### Fix
