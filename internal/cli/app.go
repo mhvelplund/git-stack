@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,11 +37,14 @@ type App struct {
 	// Provider is the --provider flag: a provider name, "none", or "" to use
 	// git config or detect it from the remote URL.
 	Provider string
+	// NoVerify is the --no-verify flag: run git without hooks.
+	NoVerify bool
 	// NewForge overrides how forges are built (tests use a fake).
 	NewForge func(remote string) (*forge.Forge, error)
 
 	forges    map[string]*forge.Forge
 	lastForge *forge.Forge
+	hooksPath string
 
 	in *bufio.Reader
 }
@@ -74,7 +78,15 @@ func (a *App) runTUI(m tea.Model) (tea.Model, error) {
 	return tui.Run(m, a.In, a.Err)
 }
 
-func (a *App) repo() *git.Repo { return &git.Repo{Dir: a.Dir} }
+func (a *App) repo() *git.Repo {
+	if a.NoVerify && a.hooksPath == "" {
+		// A directory that is never created, so git finds no hooks.
+		if dir, err := (&git.Repo{Dir: a.Dir}).CommonDir(); err == nil {
+			a.hooksPath = filepath.Join(dir, "git-stack-no-hooks")
+		}
+	}
+	return &git.Repo{Dir: a.Dir, HooksPath: a.hooksPath}
+}
 
 func (a *App) store() (stack.Store, error) {
 	dir, err := a.repo().CommonDir()

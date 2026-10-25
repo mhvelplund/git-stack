@@ -21,6 +21,7 @@ func NewRoot(app *App) *cobra.Command {
 		SilenceErrors: true,
 	}
 	root.PersistentFlags().StringVar(&app.Provider, "provider", "", "pull request provider: github, gitlab, none, or another installed git-stack-<name> plugin (default: git config git-stack.provider, else detected from the remote URL)")
+	root.PersistentFlags().BoolVar(&app.NoVerify, "no-verify", false, "run git without hooks (pre-commit, commit-msg, pre-push, ...) for this command only; no config is changed")
 	root.SetFlagErrorFunc(flagError)
 	root.SetOut(app.Out)
 	root.SetErr(app.Err)

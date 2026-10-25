@@ -201,3 +201,23 @@ func TestCheckoutMissingBranchNamedLikePath(t *testing.T) {
 		t.Fatal("the uncommitted edit under docs/ was discarded")
 	}
 }
+
+func TestHooksPath(t *testing.T) {
+	t.Parallel()
+	tr := testutil.NewRepo(t)
+	hook := filepath.Join(tr.Dir, ".git", "hooks", "pre-commit")
+	if err := os.MkdirAll(filepath.Dir(hook), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(hook, []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	g := &git.Repo{Dir: tr.Dir}
+	if _, err := g.Run("commit", "--allow-empty", "-m", "hooked"); err == nil {
+		t.Fatal("commit succeeded although the hook failed")
+	}
+	off := (&git.Repo{HooksPath: filepath.Join(tr.Dir, ".git", "no-hooks")}).At(tr.Dir)
+	if _, err := off.Run("commit", "--allow-empty", "-m", "unhooked"); err != nil {
+		t.Fatal(err)
+	}
+}

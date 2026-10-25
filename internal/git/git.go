@@ -16,6 +16,10 @@ import (
 // Repo runs git commands in Dir.
 type Repo struct {
 	Dir string
+	// HooksPath, if set, is passed to every git command as core.hooksPath;
+	// pointing it at a missing directory runs git without hooks. It only
+	// lives on the command line, so no config is ever changed.
+	HooksPath string
 }
 
 // Error is returned when git exits non-zero.
@@ -37,7 +41,7 @@ func (e *Error) Unwrap() error { return e.Err }
 
 // Run executes git with args and returns trimmed stdout.
 func (r *Repo) Run(args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", r.args(args)...)
 	cmd.Dir = r.Dir
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	var stdout, stderr bytes.Buffer
@@ -50,7 +54,15 @@ func (r *Repo) Run(args ...string) (string, error) {
 }
 
 // At returns a Repo rooted at dir, e.g. another worktree.
-func (r *Repo) At(dir string) *Repo { return &Repo{Dir: dir} }
+func (r *Repo) At(dir string) *Repo { return &Repo{Dir: dir, HooksPath: r.HooksPath} }
+
+// args prepends the per-command config to args.
+func (r *Repo) args(args []string) []string {
+	if r.HooksPath == "" {
+		return args
+	}
+	return append([]string{"-c", "core.hooksPath=" + r.HooksPath}, args...)
+}
 
 // TopLevel returns the root of the current worktree.
 func (r *Repo) TopLevel() (string, error) { return r.Run("rev-parse", "--show-toplevel") }
@@ -301,7 +313,7 @@ func (r *Repo) ValidBranchName(name string) bool {
 
 // RunEnv executes git with extra environment variables.
 func (r *Repo) RunEnv(env []string, args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", r.args(args)...)
 	cmd.Dir = r.Dir
 	cmd.Env = append(append(os.Environ(), "GIT_TERMINAL_PROMPT=0"), env...)
 	var stdout, stderr bytes.Buffer
