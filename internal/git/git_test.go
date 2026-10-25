@@ -137,6 +137,35 @@ func TestIncludes(t *testing.T) {
 	}
 }
 
+func TestHasPatches(t *testing.T) {
+	t.Parallel()
+	tr := testutil.NewRepo(t)
+	g := &git.Repo{Dir: tr.Dir}
+	tr.Git("checkout", "--quiet", "-b", "feat")
+	tr.Commit("a.txt", "a\n", "a")
+	// The host rebased the branch itself: the same change, a new commit.
+	tr.Git("branch", "rebased", "main")
+	tr.Git("checkout", "--quiet", "rebased")
+	tr.Git("cherry-pick", "feat")
+	tr.Git("commit", "--quiet", "--amend", "-m", "a, rebased by the host")
+	rebased := tr.Git("rev-parse", "HEAD")
+	if g.Includes("feat", rebased) {
+		t.Fatal("the host's rebase should not count as included")
+	}
+	if !g.HasPatches("feat", rebased) {
+		t.Fatal("a commit with a change the branch has is not recognised")
+	}
+	extra := tr.Commit("b.txt", "b\n", "someone else's")
+	if g.HasPatches("feat", extra) {
+		t.Fatal("a new change is seen as already in the branch")
+	}
+	tr.Git("reset", "--quiet", "--hard", rebased)
+	tr.Git("merge", "--quiet", "--no-ff", "-m", "merge feat", "feat")
+	if g.HasPatches("feat", tr.Git("rev-parse", "HEAD")) {
+		t.Fatal("a merge commit is seen as already in the branch")
+	}
+}
+
 func TestBranchNamesAndTags(t *testing.T) {
 	t.Parallel()
 	tr := testutil.NewRepo(t)
