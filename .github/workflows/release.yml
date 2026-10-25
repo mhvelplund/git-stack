@@ -1,0 +1,73 @@
+name: Release
+
+# On every push to main: run CI, then let commitizen bump the version from the
+# Conventional Commits since the last tag. A bump commits the new version
+# (.cz.toml, mise.toml pins, CHANGELOG.md) and pushes it with a `vX.Y.Z` tag.
+# Commits that release nothing (docs, ci, chore, ...) leave main untouched.
+#
+# The push uses a token minted from a GitHub App, so it can get past branch
+# protection and triggers workflows for the bump commit. The App's client ID is
+# the RELEASE_APP_CLIENT_ID variable and its private key the
+# RELEASE_APP_PRIVATE_KEY secret.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Bumps must run one at a time, in push order.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  bump:
+    needs: ci
+    # The bump commit itself runs CI above, but must not bump again.
+    if: ${{ !startsWith(github.event.head_commit.message, 'bump:') }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+      - name: Bot identity
+        id: bot
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          id=$(gh api "/users/${SLUG}%5Bbot%5D" --jq .id)
+          echo "name=${SLUG}[bot]" >> "$GITHUB_OUTPUT"
+          echo "email=${id}+${SLUG}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app.outputs.token }}
+          fetch-depth: 0 # all commits and tags since the last release
+      - uses: commitizen-tools/commitizen-action@0.27.1
+        with:
+          github_token: ${{ steps.app.outputs.token }}
+          git_name: ${{ steps.bot.outputs.name }}
+          git_email: ${{ steps.bot.outputs.email }}
+          commitizen_version: 4.19.3
+          changelog_increment_filename: release-notes.md
+          no_raise: '21' # NO_COMMITS_TO_BUMP: nothing to release
+      - name: Released tag
+        id: tag
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            echo "tag=$(git describe --tags --exact-match HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+      - if: ${{ steps.tag.outputs.tag != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: release-notes.md
