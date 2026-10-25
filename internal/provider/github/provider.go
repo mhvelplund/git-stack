@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	graphql "github.com/cli/shurcooL-graphql"
@@ -43,7 +44,7 @@ func Plugin(opts api.ClientOptions) protocol.Plugin {
 			if err != nil {
 				return nil, protocol.Errorf(protocol.CodeAuth, "%v (run `gh auth login --hostname %s`)", err, repo.Host)
 			}
-			return &Provider{c: c}, nil
+			return &Provider{c: c, sleep: time.Sleep}, nil
 		},
 	}
 }
@@ -70,7 +71,16 @@ type Provider struct {
 	// enabled here (or the host is a GitHub Enterprise Server without them),
 	// so only the description block records the stack.
 	noStacks bool
+	// sleep waits between polls of an async merge; tests replace it.
+	sleep func(time.Duration)
 }
+
+// asyncMergePoll is how often, and asyncMergeWait how long, Merge polls an
+// async merge before giving up.
+const (
+	asyncMergePoll = 2 * time.Second
+	asyncMergeWait = 5 * time.Minute
+)
 
 var _ protocol.Provider = (*Provider)(nil)
 
@@ -279,9 +289,17 @@ func (p *Provider) CancelAutoMerge(number int) error {
 // Merge merges the pull request at sha. When GitHub refuses a direct merge
 // (checks pending, reviews required, merge queue), it enables auto-merge
 // instead, so the PR merges, or joins the queue, once the rules are met.
+// A PR in a native stack goes through the async merge endpoint instead.
 func (p *Provider) Merge(number int, method, sha string) (*protocol.CR, error) {
 	if method == "" {
 		method = protocol.MethodMerge
+	}
+	stacked, err := p.inStack(number)
+	if err != nil {
+		return nil, err
+	}
+	if stacked {
+		return p.mergeAsync(number, method, sha)
 	}
 	body, err := json.Marshal(map[string]string{"merge_method": method, "sha": sha})
 	if err != nil {
@@ -306,6 +324,59 @@ func (p *Provider) Merge(number int, method, sha string) (*protocol.CR, error) {
 	if err := p.enableAutoMerge(n.ID, method, sha); err != nil {
 		cr := n.cr()
 		cr.MergeError = fmt.Sprintf("%v; enabling auto-merge also failed: %v", mergeErr, err)
+		return cr, nil
+	}
+	return p.GetCR(number)
+}
+
+// inStack reports whether the pull request is in a native stack. GitHub
+// merges those only through the async merge endpoint.
+func (p *Provider) inStack(number int) (bool, error) {
+	if p.noStacks {
+		return false, nil
+	}
+	rs, err := p.c.FindStackForPR(number)
+	if p.stacksUnavailable(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, classify(err)
+	}
+	return rs != nil, nil
+}
+
+// mergeAsync merges a pull request in a native stack, together with any open
+// PRs below it, and waits for GitHub to finish. The endpoint takes no head
+// SHA, so the head is checked first. A PR that joins the merge queue comes
+// back with AutoMerge set, as on the direct path.
+func (p *Provider) mergeAsync(number int, method, sha string) (*protocol.CR, error) {
+	n, err := p.node(number)
+	if err != nil {
+		return nil, err
+	}
+	if sha != "" && n.HeadRefOid != sha {
+		return nil, protocol.Errorf(protocol.CodeFailure, "#%d moved on GitHub since it was pushed (head %s, expected %s)", number, n.HeadRefOid, sha)
+	}
+	res, err := p.c.MergeStackAsync(number, method, MergeActionDefault)
+	if err != nil {
+		return nil, classify(err)
+	}
+	uuid := res.Details.UUID
+	for waited := time.Duration(0); res.IsPending(); waited += asyncMergePoll {
+		if waited >= asyncMergeWait {
+			return nil, protocol.Errorf(protocol.CodeFailure, "timed out waiting for GitHub to merge #%d; it is still merging in the background", number)
+		}
+		p.sleep(asyncMergePoll)
+		if res, err = p.c.GetAsyncMergeResult(number, uuid); err != nil {
+			return nil, classify(err)
+		}
+	}
+	if res.IsFailed() {
+		cr := n.cr()
+		cr.MergeError = res.Details.Message
+		if cr.MergeError == "" {
+			cr.MergeError = "GitHub reported the merge as failed"
+		}
 		return cr, nil
 	}
 	return p.GetCR(number)

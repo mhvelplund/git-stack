@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 
@@ -210,6 +211,65 @@ func TestMergeFallsBackToAutoMerge(t *testing.T) {
 	}
 	if cr, err := p.Merge(5, protocol.MethodMerge, "abc"); err != nil || !cr.Merged() {
 		t.Fatalf("direct merge = %+v, %v", cr, err)
+	}
+}
+
+func TestMergeStackedPRUsesAsyncEndpoint(t *testing.T) {
+	f := newFake()
+	f.addPR(1, "OPEN", "a", "main", nil)
+	f.addPR(2, "OPEN", "b", "a", nil)
+	f.rest["GET repos/o/r/stacks?pull_request=1"] = func(map[string]any) (int, any) { return http.StatusOK, []any{stack(7, 1, 2)} }
+	var submitted map[string]any
+	f.rest["PUT repos/o/r/pulls/1/merge-async"] = func(body map[string]any) (int, any) {
+		submitted = body
+		return http.StatusAccepted, map[string]any{"status": "pending", "details": map[string]any{"uuid": "u1"}}
+	}
+	polls := 0
+	f.rest["GET repos/o/r/pulls/1/merge-async/u1"] = func(map[string]any) (int, any) {
+		if polls++; polls < 2 {
+			return http.StatusOK, map[string]any{"status": "pending", "details": map[string]any{}}
+		}
+		f.prs[1]["state"] = "MERGED"
+		return http.StatusOK, map[string]any{"status": "merged", "details": map[string]any{"sha": "m"}}
+	}
+	p := provider(t, f)
+	slept := 0
+	p.(*Provider).sleep = func(time.Duration) { slept++ }
+
+	cr, err := p.Merge(1, protocol.MethodRebase, "sha-a")
+	if err != nil || !cr.Merged() {
+		t.Fatalf("stacked merge = %+v, %v", cr, err)
+	}
+	if submitted["merge_method"] != "rebase" || submitted["merge_action"] != "default" {
+		t.Fatalf("merge-async body = %v", submitted)
+	}
+	if slept != 2 {
+		t.Fatalf("slept %d times, want 2", slept)
+	}
+	for _, c := range f.calls {
+		if c == "PUT repos/o/r/pulls/1/merge" {
+			t.Fatal("stacked PR went through the direct merge endpoint")
+		}
+	}
+
+	// A failed merge reports GitHub's reason on the still open PR.
+	f.prs[1]["state"] = "OPEN"
+	f.rest["PUT repos/o/r/pulls/1/merge-async"] = func(map[string]any) (int, any) {
+		return http.StatusOK, map[string]any{"status": "failed", "details": map[string]any{"message": "merge conflict"}}
+	}
+	if cr, err := p.Merge(1, "", "sha-a"); err != nil || !cr.Open() || cr.MergeError != "merge conflict" {
+		t.Fatalf("failed merge = %+v, %v", cr, err)
+	}
+
+	// A head that moved since the push is not merged.
+	n := len(f.calls)
+	if _, err := p.Merge(1, "", "other"); err == nil || !strings.Contains(err.Error(), "moved on GitHub") {
+		t.Fatalf("moved head: %v", err)
+	}
+	for _, c := range f.calls[n:] {
+		if strings.HasPrefix(c, "PUT ") {
+			t.Fatalf("moved head was merged: %v", f.calls[n:])
+		}
 	}
 }
 
