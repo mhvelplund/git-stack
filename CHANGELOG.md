@@ -1,4 +1,8 @@
-## Unreleased
+## v1.0.1 (2026-10-25)
+
+### Fix
+
+- **github**: merge PRs in a native stack through the async endpoint
 
 ## v1.0.0 (2026-10-24)
 
